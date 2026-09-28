@@ -1,0 +1,53 @@
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+
+use crate::{app::AppState::MainMenu, game::Game};
+
+#[derive(Debug, Default)]
+pub struct App {
+    pub should_quit: bool,
+    pub state: AppState,
+}
+
+#[derive(Debug)]
+pub enum AppState {
+    MainMenu(),
+    InGame(Game),
+    Paused(Game),
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        MainMenu()
+    }
+}
+
+pub const GRID_WIDTH: i32 = 60;
+pub const GRID_HEIGHT: i32 = 20;
+
+impl App {
+    pub fn new() -> Self {
+        let game = Game::new();
+        Self {
+            state: AppState::InGame(game),
+            ..Default::default()
+        }
+    }
+
+    pub fn tick(&self) {}
+
+    pub fn handle_input(&mut self, key_event: KeyEvent) {
+        match &mut self.state {
+            AppState::InGame(game) => game.handle_input(key_event),
+            _ => ()
+        }
+        match key_event.code {
+            KeyCode::Esc | KeyCode::Char('q') => self.quit(),
+            KeyCode::Char('c') if key_event.modifiers == KeyModifiers::CONTROL => self.quit(),
+            _ => {}
+        };
+    }
+
+    pub fn quit(&mut self) {
+        self.should_quit = true;
+    }
+}
