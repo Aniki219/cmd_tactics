@@ -11,8 +11,7 @@ pub mod game;
 pub mod tui;
 pub mod ui;
 
-pub mod glyphs;
-pub mod player;
+pub mod types;
 
 mod util;
 

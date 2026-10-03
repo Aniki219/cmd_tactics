@@ -7,9 +7,7 @@ use ratatui::{
 };
 
 use crate::{
-    app::{App, AppState, GRID_HEIGHT, GRID_WIDTH},
-    game::{Coordinate, Game},
-    glyphs,
+    app::{App, AppState, GRID_HEIGHT, GRID_WIDTH}, game::Game, types::{coordinate::Coordinate, glyphs},
 };
 
 pub fn render(app: &App, frame: &mut Frame) {

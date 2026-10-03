@@ -26,7 +26,8 @@ pub const GRID_HEIGHT: i32 = 20;
 
 impl App {
     pub fn new() -> Self {
-        let game = Game::new();
+        let mut game = Game::new();
+        game.init();
         Self {
             state: AppState::InGame(game),
             ..Default::default()
