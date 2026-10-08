@@ -7,7 +7,9 @@ use ratatui::{
 };
 
 use crate::{
-    app::{App, AppState, GRID_HEIGHT, GRID_WIDTH}, game::Game, types::{coordinate::Coordinate, glyphs},
+    app::{App, AppState, GRID_HEIGHT, GRID_WIDTH},
+    game::Game,
+    types::{coordinate::Coordinate, glyphs},
 };
 
 pub fn render(app: &App, frame: &mut Frame) {
@@ -28,15 +30,16 @@ pub fn render_game(game: &Game, frame: &mut Frame) {
         let mut empty_buffer = String::new();
         for x in (0..GRID_WIDTH).step_by(2) {
             let top_renderable = game
+                .world
                 .grid
                 .get(&Coordinate(x / 2, y))
-                .and_then(|list| list.iter().max_by_key(|e| e.layer(game)));
+                .and_then(|list| list.iter().max_by_key(|e| e.layer));
             if let Some(renderable) = top_renderable {
                 if !empty_buffer.is_empty() {
                     row_spans.push(Span::raw(empty_buffer));
                     empty_buffer = String::new();
                 }
-                let (glyph, color) = renderable.glyph_and_color(game);
+                let (glyph, color) = renderable.glyph_and_color();
                 let style = Style::default().fg(color);
                 row_spans.push(Span::styled(glyph, style));
             } else {

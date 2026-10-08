@@ -7,4 +7,8 @@ impl Coordinate {
     pub fn center() -> Self {
         Coordinate(GRID_WIDTH / 4 - 2, GRID_HEIGHT / 2 - 1)
     }
+
+    pub fn plus(self, other: Coordinate) -> Coordinate {
+        Coordinate(self.0 + other.0, self.1 + other.1)
+    }
 }

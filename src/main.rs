@@ -1,4 +1,4 @@
-use crate::app::App;
+use crate::{app::App};
 use color_eyre::Result;
 use event::{Event, EventHandler};
 use ratatui::{Terminal, backend::CrosstermBackend};
@@ -10,14 +10,16 @@ pub mod event;
 pub mod game;
 pub mod tui;
 pub mod ui;
+pub mod world;
 
+pub mod phases;
 pub mod types;
 
-mod util;
+pub mod util;
 
 fn main() -> Result<()> {
     util::logging::init()?;
-    tracing::info!("starting game");
+    log!("starting game");
     let mut app = App::new();
 
     let backend = CrosstermBackend::new(std::io::stderr());

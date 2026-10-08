@@ -26,3 +26,8 @@ pub fn init() -> Result<()> {
 
     Ok(())
 }
+
+#[macro_export]
+macro_rules! log {
+    ($($arg:tt)*) => { tracing::info!($($arg)*) };
+}

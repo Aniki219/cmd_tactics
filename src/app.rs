@@ -2,13 +2,13 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use crate::{app::AppState::MainMenu, game::Game};
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct App {
     pub should_quit: bool,
     pub state: AppState,
 }
 
-#[derive(Debug)]
+
 pub enum AppState {
     MainMenu(),
     InGame(Game),
