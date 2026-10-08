@@ -9,7 +9,7 @@ use ratatui::{
 use crate::{
     app::{App, AppState, GRID_HEIGHT, GRID_WIDTH},
     game::Game,
-    types::{coordinate::Coordinate, glyphs},
+    types::{EntityKind, Layer::ForegroundUi, coordinate::Coordinate, glyphs},
 };
 
 pub fn render(app: &App, frame: &mut Frame) {
@@ -25,15 +25,22 @@ pub fn render_menu(_frame: &mut Frame) {}
 pub fn render_game(game: &Game, frame: &mut Frame) {
     let mut lines: Vec<Line> = Vec::with_capacity(GRID_HEIGHT as usize);
 
+    let blink = frame.count() % 4 > 1;
+
     for y in 0..GRID_HEIGHT {
         let mut row_spans = Vec::new();
         let mut empty_buffer = String::new();
         for x in (0..GRID_WIDTH).step_by(2) {
-            let top_renderable = game
-                .world
-                .grid
-                .get(&Coordinate(x / 2, y))
-                .and_then(|list| list.iter().max_by_key(|e| e.layer));
+            let top_renderable = game.world.grid.get(&Coordinate(x / 2, y)).and_then(|list| {
+                let should_blink = list
+                    .iter()
+                    .by_ref()
+                    .find(|e| matches!(e.kind, EntityKind::Player(_)))
+                    .is_some();
+                list.iter()
+                    .filter(|e| !(should_blink && blink) || !matches!(e.layer, ForegroundUi))
+                    .max_by_key(|e| e.layer)
+            });
             if let Some(renderable) = top_renderable {
                 if !empty_buffer.is_empty() {
                     row_spans.push(Span::raw(empty_buffer));
