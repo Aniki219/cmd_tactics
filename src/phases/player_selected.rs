@@ -1,14 +1,8 @@
-use std::collections::VecDeque;
-
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::style::Color::White;
 
 use crate::{
-    game::{
-        Command::{self, MoveEntityBy},
-        Phase,
-    },
-    phases::player_turn::PlayerTurnState,
+    phases::{Phase, player_turn::PlayerTurnState},
     types::{EntityKind::MoveTile, Layer::BackgroundUi, *},
     world::World,
 };
@@ -29,11 +23,24 @@ impl PlayerSelectedState {
         }
     }
 
-    fn move_cursor(&mut self, by_x: i32, by_y: i32) -> VecDeque<Command> {
-        let mut cmd = VecDeque::<Command>::new();
-        cmd.push_back(MoveEntityBy(self.cursor, Coordinate(by_x, by_y)));
+    fn back(&self) -> Box<dyn Phase> {
+        Box::new(PlayerTurnState::new(self.cursor))
+    }
 
-        cmd
+    fn confirm(&mut self, world: &mut World) -> Option<Box<dyn Phase>> {
+        {
+            let pos = world.get(self.cursor)?.pos;
+
+            if world.at(pos).any(|e| matches!(e.layer, Layer::Entity)) {
+                return None;
+            };
+            if world.at(pos).any(|e| matches!(e.kind, EntityKind::MoveTile))
+            {
+                world.move_to(self.selected, pos);
+            };
+
+            Some(self.back())
+        }
     }
 }
 
@@ -59,47 +66,24 @@ impl Phase for PlayerSelectedState {
         }
     }
 
-    fn handle_input(&mut self, key: KeyEvent, world: &mut World) -> VecDeque<Command> {
+    fn handle_input(&mut self, key: KeyEvent, world: &mut World) -> Option<Box<dyn Phase>> {
+        let mut move_cursor = |x, y| {
+            world.move_by(self.cursor, Coordinate(x, y));
+            return None;
+        };
+
         match key.code {
             // Pressing A on a MoveTile should move you there
             // on an Entity should do nothing
             // on an empty tile should cancel the move command and return to PlayerTurn
-            KeyCode::Char('a') => {
-                let mut cmd = VecDeque::<Command>::new();
+            KeyCode::Char('a') => self.confirm(world),
+            KeyCode::Char('s') => Some(self.back()),
 
-                let Some(pos) = world.get(self.cursor).map(|e| e.pos) else {
-                    return cmd;
-                };
-                let entities: Vec<&Entity> = world.at(pos).collect();
-                if let Some(_) = entities.iter().find(|e| matches!(e.layer, Layer::Entity)) {
-                    return cmd;
-                };
-                if let Some(_) = entities
-                    .iter()
-                    .find(|e| matches!(e.kind, EntityKind::MoveTile))
-                {
-                    cmd.push_back(Command::MoveEntityTo(self.selected, pos));
-                };
-                cmd.push_back(Command::ChangePhase(Box::new(PlayerTurnState::new(
-                    self.cursor,
-                ))));
-
-                cmd
-            }
-
-            KeyCode::Char('s') => {
-                let mut cmd = VecDeque::new();
-                cmd.push_back(Command::ChangePhase(Box::new(PlayerTurnState::new(
-                    self.cursor,
-                ))));
-                cmd
-            }
-
-            KeyCode::Left => self.move_cursor(-1, 0),
-            KeyCode::Right => self.move_cursor(1, 0),
-            KeyCode::Up => self.move_cursor(0, -1),
-            KeyCode::Down => self.move_cursor(0, 1),
-            _ => VecDeque::new(),
+            KeyCode::Left => move_cursor(-1, 0),
+            KeyCode::Right => move_cursor(1, 0),
+            KeyCode::Up => move_cursor(0, -1),
+            KeyCode::Down => move_cursor(0, 1),
+            _ => None,
         }
     }
 }

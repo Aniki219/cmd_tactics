@@ -1,0 +1,14 @@
+[[player]]
+name = "charmander"
+health = 10
+pos = [4, 4]
+
+[[player]]
+name = "squirtle"
+health = 15
+pos = [5, 4]
+
+[[player]]
+name = "bulbasaur"
+health = 20
+pos = [6, 4]

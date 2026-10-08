@@ -1,14 +1,12 @@
-use std::collections::VecDeque;
-
 use crossterm::event::KeyEvent;
-use ratatui::style::Color::{self, White};
-use strum::Display;
+use ratatui::style::Color::White;
 
 use crate::{
-    game::Command::*,
     log,
-    phases::{player_selected::PlayerSelectedState, player_turn::PlayerTurnState},
+    phases::{Phase, init_game::InitGame, player_turn::PlayerTurnState},
+    setup::{PlayerData, add_player},
     types::{EntityKind::Cursor, Layer::ForegroundUi, *},
+    util::load::load_toml,
     world::World,
 };
 
@@ -17,39 +15,6 @@ pub struct Game {
     pub players: Vec<EntityId>,
     pub phase: Box<dyn Phase>,
 }
-
-pub struct InitGame {}
-
-impl InitGame {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-impl Phase for InitGame {
-    fn handle_input(&mut self, _key: KeyEvent, _world: &mut World) -> VecDeque<Command> {
-        VecDeque::new()
-    }
-}
-
-pub trait Phase {
-    fn on_enter(&mut self, _world: &mut World) {}
-    fn on_exit(&mut self, _world: &mut World) {}
-    fn handle_input(&mut self, key: KeyEvent, world: &mut World) -> VecDeque<Command>;
-}
-
-const PLAYER_COLORS: [Color; 10] = [
-    Color::Red,
-    Color::Yellow,
-    Color::Green,
-    Color::Blue,
-    Color::Magenta,
-    Color::LightRed,
-    Color::LightYellow,
-    Color::LightGreen,
-    Color::LightBlue,
-    Color::LightMagenta,
-];
 
 impl Game {
     pub fn new() -> Self {
@@ -60,20 +25,17 @@ impl Game {
         }
     }
 
-    fn add_player(&mut self, pos: Coordinate) {
-        self.players.push(self.world.spawn(
-            EntityKind::Player(self.players.len() as i32 + 1),
-            pos,
-            Layer::Entity,
-            PLAYER_COLORS[self.players.len() % PLAYER_COLORS.len()],
-        ));
-    }
-
     pub fn init(&mut self) {
         log!("Spawning players");
-        self.add_player(Coordinate(4, 4));
-        self.add_player(Coordinate(14, 8));
-        self.add_player(Coordinate(10, 10));
+        match load_toml::<PlayerData>("data/players.toml") {
+            Ok(player_data) => {
+                for player in player_data.player {
+                    log!("Spawning player {} hp: {}", player.name, player.health);
+                    add_player(&mut self.world, &mut self.players, player.pos);
+                }
+            }
+            Err(e) => log!("Failed to load players.toml: {}", e),
+        }
 
         let cursor = self
             .world
@@ -89,35 +51,8 @@ impl Game {
     }
 
     pub fn handle_input(&mut self, key: KeyEvent) {
-        let cmds: VecDeque<Command> = self.phase.handle_input(key, &mut self.world);
-
-        for cmd in cmds {
-            self.do_command(cmd);
+        if let Some(next) = self.phase.handle_input(key, &mut self.world) {
+            self.change_phase(next);
         }
     }
-
-    fn do_command(&mut self, command: Command) {
-        log!("{}", command);
-        match command {
-            MoveEntityBy(id, by) => self.world.move_by(id, by),
-            MoveEntityTo(id, to) => self.world.move_to(id, to),
-            SelectPlayer(cursor, selected) => {
-                self.change_phase(Box::new(PlayerSelectedState::new(cursor, selected)))
-            }
-            ChangePhase(phase) => {
-                self.change_phase(phase);
-            }
-            _ => todo!(),
-        };
-    }
-}
-
-#[derive(Display)]
-pub enum Command {
-    MoveEntityBy(EntityId, Coordinate),
-    MoveEntityTo(EntityId, Coordinate),
-    SelectEnemy(EntityId),
-    SelectPlayer(EntityId, EntityId),
-    TryMove(EntityId),
-    ChangePhase(Box<dyn Phase>),
 }

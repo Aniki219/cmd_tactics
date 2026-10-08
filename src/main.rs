@@ -1,4 +1,4 @@
-use crate::{app::App};
+use crate::app::App;
 use color_eyre::Result;
 use event::{Event, EventHandler};
 use ratatui::{Terminal, backend::CrosstermBackend};
@@ -8,6 +8,7 @@ use tui::Tui;
 pub mod app;
 pub mod event;
 pub mod game;
+pub mod setup;
 pub mod tui;
 pub mod ui;
 pub mod world;
