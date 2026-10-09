@@ -1,11 +1,10 @@
 use crossterm::event::KeyEvent;
-use ratatui::style::Color::White;
 
 use crate::{
     log,
     phases::{Phase, init_game::InitGame, player_turn::PlayerTurnState},
     setup::{PlayerData, add_player},
-    types::{EntityKind::Cursor, Layer::ForegroundUi, *},
+    types::{Coordinate, EntityId},
     util::load::load_toml,
     world::World,
 };
@@ -36,12 +35,13 @@ impl Game {
             }
             Err(e) => log!("Failed to load players.toml: {}", e),
         }
-
-        let cursor = self
-            .world
-            .spawn(Cursor, Coordinate::center(), ForegroundUi, White);
-
-        self.change_phase(Box::new(PlayerTurnState::new(cursor)));
+        let start = self
+            .players
+            .first()
+            .and_then(|&id| self.world.get(id))
+            .map(|e| e.pos)
+            .unwrap_or_else(Coordinate::center);
+        self.change_phase(Box::new(PlayerTurnState::new(start)));
     }
 
     pub fn change_phase(&mut self, mut to: Box<dyn Phase>) {

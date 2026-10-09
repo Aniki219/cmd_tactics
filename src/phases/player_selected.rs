@@ -3,40 +3,47 @@ use ratatui::style::Color::White;
 
 use crate::{
     phases::{Phase, player_turn::PlayerTurnState},
-    types::{EntityKind::MoveTile, Layer::BackgroundUi, *},
+    types::{
+        Layer::{BackgroundUi, ForegroundUi},
+        *,
+    },
     world::World,
 };
 
-#[derive(Debug)]
 pub struct PlayerSelectedState {
-    cursor: EntityId,
+    cursor: Renderable,
     selected: EntityId,
-    tiles: Vec<EntityId>,
+    tiles: Vec<Renderable>,
 }
 
 impl PlayerSelectedState {
-    pub fn new(cursor: EntityId, selected: EntityId) -> Self {
+    pub fn new(cursor_pos: Coordinate, selected: EntityId) -> Self {
         Self {
-            cursor,
+            cursor: Renderable {
+                pos: cursor_pos,
+                glyph: String::from("[]"),
+                color: White,
+                layer: ForegroundUi,
+            },
             selected,
             tiles: Vec::new(),
         }
     }
 
     fn back(&self) -> Box<dyn Phase> {
-        Box::new(PlayerTurnState::new(self.cursor))
+        Box::new(PlayerTurnState::new(self.cursor.pos))
     }
 
     fn confirm(&mut self, world: &mut World) -> Option<Box<dyn Phase>> {
         {
-            let pos = world.get(self.cursor)?.pos;
-
-            if world.at(pos).any(|e| matches!(e.layer, Layer::Entity)) {
+            if world
+                .at(self.cursor.pos)
+                .any(|e| matches!(e.layer, Layer::Entity))
+            {
                 return None;
             };
-            if world.at(pos).any(|e| matches!(e.kind, EntityKind::MoveTile))
-            {
-                world.move_to(self.selected, pos);
+            if self.tiles.iter().any(|t| t.pos == self.cursor.pos) {
+                world.move_to(self.selected, self.cursor.pos);
             };
 
             Some(self.back())
@@ -52,23 +59,20 @@ impl Phase for PlayerSelectedState {
         for i in -3..=3_i32 {
             for j in -3..=3_i32 {
                 if i.abs() + j.abs() < 4 && !(i == 0 && j == 0) {
-                    let id =
-                        world.spawn(MoveTile, origin.plus(Coordinate(i, j)), BackgroundUi, White);
-                    self.tiles.push(id);
+                    self.tiles.push(Renderable {
+                        pos: origin.plus(Coordinate(i, j)),
+                        glyph: String::from("* "),
+                        color: White,
+                        layer: BackgroundUi,
+                    });
                 }
             }
         }
     }
 
-    fn on_exit(&mut self, world: &mut World) {
-        for id in self.tiles.drain(..) {
-            world.despawn(id);
-        }
-    }
-
     fn handle_input(&mut self, key: KeyEvent, world: &mut World) -> Option<Box<dyn Phase>> {
         let mut move_cursor = |x, y| {
-            world.move_by(self.cursor, Coordinate(x, y));
+            self.cursor.pos = self.cursor.pos.plus(Coordinate(x, y));
             return None;
         };
 
@@ -85,5 +89,13 @@ impl Phase for PlayerSelectedState {
             KeyCode::Down => move_cursor(0, 1),
             _ => None,
         }
+    }
+
+    fn renderables(&self) -> Vec<Renderable> {
+        self.tiles
+            .iter()
+            .map(|t| t.clone())
+            .chain(vec![self.cursor.clone()])
+            .collect()
     }
 }
