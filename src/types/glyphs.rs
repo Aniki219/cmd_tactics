@@ -8,5 +8,8 @@ pub fn player(num: i32) -> String {
 
 pub const EMPTY: &str = "  ";
 pub const MOUNTAIN: &str = "/\\";
+pub const LITTLE_TREE: &str = " t";
+pub const TREE: &str = "T ";
+pub const DENSE_TREE: &str = "Tt";
 pub const CURSOR: &str = "[]";
 pub const MOVE_TILE: &str = "* ";

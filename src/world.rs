@@ -3,13 +3,12 @@ use std::collections::HashMap;
 use ratatui::style::Color;
 
 use crate::{
-    log,
-    types::{Coordinate, Entity, EntityId, EntityKind, Layer},
+    log, types::{Coordinate, Entity, EntityId, EntityKind, Layer, Player},
 };
 
-#[derive(Debug)]
 pub struct World {
     pub entities: HashMap<EntityId, Entity>,
+    pub players: Vec<Player>,
     next_id: i32,
     pub grid: HashMap<Coordinate, Vec<Entity>>,
 }
@@ -19,6 +18,7 @@ impl World {
         Self {
             grid: HashMap::new(),
             entities: HashMap::new(),
+            players: Vec::new(),
             next_id: 1,
         }
     }

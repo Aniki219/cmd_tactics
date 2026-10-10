@@ -2,8 +2,13 @@ use crossterm::event::KeyEvent;
 
 use crate::{
     log,
-    phases::{Phase, init_game::InitGame, player_turn::PlayerTurnState},
-    setup::{PlayerData, add_player},
+    phases::{
+        Phase,
+        action_menu::{ACTION_MENU_ITEMS, ActionMenuState},
+        init_game::InitGame,
+        player_turn::PlayerTurnState,
+    },
+    setup::{PlayerToml, add_player},
     types::{Coordinate, EntityId},
     util::load::load_toml,
     world::World,
@@ -11,7 +16,6 @@ use crate::{
 
 pub struct Game {
     pub world: World,
-    pub players: Vec<EntityId>,
     pub phase: Box<dyn Phase>,
 }
 
@@ -20,28 +24,54 @@ impl Game {
         Self {
             world: World::new(),
             phase: Box::new(InitGame::new()),
-            players: Vec::new(),
         }
     }
 
     pub fn init(&mut self) {
         log!("Spawning players");
-        match load_toml::<PlayerData>("data/players.toml") {
-            Ok(player_data) => {
-                for player in player_data.player {
-                    log!("Spawning player {} hp: {}", player.name, player.health);
-                    add_player(&mut self.world, &mut self.players, player.pos);
+        match load_toml::<PlayerToml>("data/players.toml") {
+            Ok(player_toml) => {
+                for player_data in player_toml.player {
+                    log!(
+                        "Spawning player {} hp: {}",
+                        player_data.name,
+                        player_data.health
+                    );
+                    add_player(&mut self.world, player_data);
                 }
             }
             Err(e) => log!("Failed to load players.toml: {}", e),
         }
-        let start = self
-            .players
-            .first()
-            .and_then(|&id| self.world.get(id))
-            .map(|e| e.pos)
-            .unwrap_or_else(Coordinate::center);
-        self.change_phase(Box::new(PlayerTurnState::new(start)));
+
+        let test_string = "action";
+
+        match test_string {
+            "start" => {
+                let start = self
+                    .world
+                    .players
+                    .first()
+                    .and_then(|player| self.world.get(player.id))
+                    .map(|e| e.pos)
+                    .unwrap_or_else(Coordinate::center);
+                self.change_phase(Box::new(PlayerTurnState::new(start)));
+            }
+            "action" => {
+                if let Some(data) = self.world.players.first().map(|p| p.data.clone()) {
+                    let prev_pos = data.pos.plus(Coordinate(0, -2));
+                    self.change_phase(Box::new(ActionMenuState::new(
+                        data.pos,
+                        EntityId(1),
+                        data,
+                        prev_pos,
+                        &ACTION_MENU_ITEMS,
+                    )));
+                }
+            }
+            _ => {
+                log!("No test_string to pick phase");
+            }
+        }
     }
 
     pub fn change_phase(&mut self, mut to: Box<dyn Phase>) {

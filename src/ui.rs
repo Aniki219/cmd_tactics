@@ -2,17 +2,21 @@ use std::collections::HashMap;
 
 use ratatui::{
     Frame,
-    layout::{Alignment, Rect},
+    layout::{Alignment, Constraint, Flex, Layout, Margin, Rect},
     style::{Color, Style},
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
 use crate::{
-    app::{App, AppState, GRID_HEIGHT, GRID_WIDTH},
-    game::Game,
-    types::{EntityKind::Player, Layer::ForegroundUi, Renderable, coordinate::Coordinate, glyphs},
+    app::{App, AppState}, game::Game, types::{EntityKind::Player, Layer::ForegroundUi, Renderable, coordinate::Coordinate, glyphs},
 };
+
+pub const GRID_WIDTH: u16 = 44;
+pub const GRID_HEIGHT: u16 = 20;
+
+const MAX_WIDTH: u16 = 60;
+const HUD_HEIGHT: u16 = 4;
 
 pub fn render(app: &App, frame: &mut Frame) {
     match &app.state {
@@ -38,7 +42,7 @@ pub fn render_game(game: &Game, frame: &mut Frame) {
         let mut row_spans = Vec::new();
         let mut empty_buffer = String::new();
         for x in (0..GRID_WIDTH).step_by(2) {
-            let pos = Coordinate(x / 2, y);
+            let pos = Coordinate(x as i32 / 2, y as i32);
 
             let should_blink = blink && game.world.at(pos).any(|e| matches!(e.kind, Player(_)));
             let top_renderable = game
@@ -67,24 +71,71 @@ pub fn render_game(game: &Game, frame: &mut Frame) {
         lines.push(Line::from(row_spans));
     }
 
-    let content_area = centered_rect(GRID_WIDTH as u16 + 2, GRID_HEIGHT as u16 + 2, frame.area());
+    let field_w = GRID_WIDTH as u16 + 2;
+    let field_h = GRID_HEIGHT as u16 + 2;
+    let data_w = MAX_WIDTH - GRID_WIDTH;
+
+    let [root] = Layout::horizontal([Constraint::Max(MAX_WIDTH)])
+        .flex(Flex::Center)
+        .areas(frame.area());
+
+    // Rows: field/data row, flexible gap, HUD footer
+    let [top, _gap, hud_area] = Layout::vertical([
+        Constraint::Length(field_h),
+        Constraint::Fill(1),
+        Constraint::Length(HUD_HEIGHT),
+    ])
+    .areas(root);
+
+    // Top row: field, data tab, leftover space
+    let [field_area, menu_area, _rest] = Layout::horizontal([
+        Constraint::Length(field_w),
+        Constraint::Length(data_w),
+        Constraint::Fill(1),
+    ])
+    .areas(top);
 
     frame.render_widget(
         Paragraph::new(lines)
             .block(
                 Block::default()
-                    .title(" Counter App ")
+                    .title(" Field ")
                     .title_alignment(Alignment::Center)
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded),
             )
             .style(Style::default().fg(Color::Yellow))
             .alignment(Alignment::Center),
-        content_area,
-    )
+        field_area,
+    );
+
+    frame.render_widget(
+        Paragraph::new("").block(
+            Block::default()
+                .title(" Menu ")
+                .title_alignment(Alignment::Center)
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        ),
+        menu_area,
+    );
+
+    let inner_menu = menu_area.inner(Margin::new(2, 1));
+
+    game.phase.render_menu(frame, inner_menu);
+
+    frame.render_widget(
+        Paragraph::new("").block(
+            Block::default()
+                .title(" HUD ")
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded),
+        ),
+        hud_area,
+    );
 }
 
-fn centered_rect(width: u16, height: u16, area: Rect) -> Rect {
+fn _centered_rect(width: u16, height: u16, area: Rect) -> Rect {
     let x = area.x + (area.width.saturating_sub(width)) / 2;
     let y = area.y + (area.height.saturating_sub(height)) / 2;
     Rect {

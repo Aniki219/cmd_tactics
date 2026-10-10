@@ -21,9 +21,6 @@ impl Default for AppState {
     }
 }
 
-pub const GRID_WIDTH: i32 = 60;
-pub const GRID_HEIGHT: i32 = 20;
-
 impl App {
     pub fn new() -> Self {
         let mut game = Game::new();

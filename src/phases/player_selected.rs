@@ -2,7 +2,11 @@ use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::style::Color::White;
 
 use crate::{
-    phases::{Phase, player_turn::PlayerTurnState},
+    phases::{
+        Phase,
+        action_menu::{ACTION_MENU_ITEMS, ActionMenuState},
+        player_turn::PlayerTurnState,
+    },
     types::{
         Layer::{BackgroundUi, ForegroundUi},
         *,
@@ -13,6 +17,7 @@ use crate::{
 pub struct PlayerSelectedState {
     cursor: Renderable,
     selected: EntityId,
+    prev_pos: Coordinate,
     tiles: Vec<Renderable>,
 }
 
@@ -25,6 +30,7 @@ impl PlayerSelectedState {
                 color: White,
                 layer: ForegroundUi,
             },
+            prev_pos: cursor_pos,
             selected,
             tiles: Vec::new(),
         }
@@ -44,6 +50,15 @@ impl PlayerSelectedState {
             };
             if self.tiles.iter().any(|t| t.pos == self.cursor.pos) {
                 world.move_to(self.selected, self.cursor.pos);
+                if let Some(data) = world.players.iter().find(|p| p.id == self.selected).map(|p| p.data.clone()) {
+                    return Some(Box::new(ActionMenuState::new(
+                        self.cursor.pos,
+                        self.selected,
+                        data,
+                        self.prev_pos,
+                        &ACTION_MENU_ITEMS,
+                    )));
+                }
             };
 
             Some(self.back())
