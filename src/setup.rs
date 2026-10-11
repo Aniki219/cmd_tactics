@@ -2,7 +2,8 @@ use ratatui::style::Color;
 use serde::Deserialize;
 
 use crate::{
-    types::{Coordinate, EntityKind, Layer, Player}, world::World,
+    types::{Coordinate, EntityKind, Layer, Player},
+    world::World,
 };
 
 pub const PLAYER_COLORS: [Color; 10] = [
@@ -38,8 +39,5 @@ pub fn add_player(world: &mut World, data: PlayerData) {
         PLAYER_COLORS[world.players.len() % PLAYER_COLORS.len()],
     );
 
-    world.players.push(Player {
-        id,
-        data
-    });
+    world.players.insert(id, Player::new(id, data));
 }

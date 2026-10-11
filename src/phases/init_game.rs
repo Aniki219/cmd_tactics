@@ -1,6 +1,6 @@
 use crossterm::event::KeyEvent;
 
-use crate::{phases::Phase, world::World};
+use crate::{phases::{Phase, Transition}, world::World};
 
 pub struct InitGame {}
 
@@ -11,7 +11,7 @@ impl InitGame {
 }
 
 impl Phase for InitGame {
-    fn handle_input(&mut self, _key: KeyEvent, _world: &mut World) -> Option<Box<dyn Phase>> {
-        None
+    fn handle_input(&mut self, _key: KeyEvent, _world: &mut World) -> Transition {
+        Transition::None
     }
 }

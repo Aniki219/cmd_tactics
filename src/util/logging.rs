@@ -19,8 +19,11 @@ pub fn init() -> Result<()> {
 
     tracing_subscriber::fmt()
         .with_writer(log_file)
-        .with_ansi(false) // no color codes in the plain file
+        .with_ansi(true) // no color codes in the plain file
+        .without_time()
         .with_target(true) // show module path per line, handy for a TUI app
+        .with_line_number(true)
+        .with_level(true)
         .with_env_filter(filter)
         .init();
 

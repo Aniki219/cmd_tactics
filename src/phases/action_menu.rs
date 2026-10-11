@@ -2,42 +2,29 @@ use crossterm::event::KeyCode;
 use ratatui::{
     Frame,
     layout::{Constraint, Direction::Vertical, Layout, Rect},
-    style::Color,
-    widgets::{Block, List, Paragraph},
+    style::{Color, Style},
+    widgets::{Block, List, ListState, Paragraph},
 };
 
 use crate::{
-    phases::{Phase, player_selected::PlayerSelectedState},
-    setup::PlayerData,
+    phases::{Phase, Transition, UiTheme, player_turn::PlayerTurnState},
     types::{Coordinate, EntityId, Layer::BackgroundUi, Renderable},
     util::helpers::ToVecString,
-    world,
+    world::World,
 };
 
 pub const ACTION_MENU_ITEMS: [&str; 3] = ["Attack", "Skill", "End"];
 
 pub struct ActionMenuState {
-    cursor_pos: Coordinate,
     player_id: EntityId,
-    player: PlayerData,
-    prev_pos: Coordinate,
-    selected_item: i32,
+    selected_item: usize,
     actions: Vec<String>,
 }
 
 impl ActionMenuState {
-    pub fn new(
-        cursor_pos: Coordinate,
-        player_id: EntityId,
-        player: PlayerData,
-        prev_pos: Coordinate,
-        actions: &[&str],
-    ) -> Self {
+    pub fn new(player_id: EntityId, actions: &[&str]) -> Self {
         Self {
-            cursor_pos,
             player_id,
-            player,
-            prev_pos,
             selected_item: 0,
             actions: actions.to_strings(),
         }
@@ -45,36 +32,37 @@ impl ActionMenuState {
 }
 
 impl Phase for ActionMenuState {
-    fn handle_input(
-        &mut self,
-        key: crossterm::event::KeyEvent,
-        world: &mut crate::world::World,
-    ) -> Option<Box<dyn Phase>> {
+    fn handle_input(&mut self, key: crossterm::event::KeyEvent, world: &mut World) -> Transition {
+        let n = self.actions.len();
+        let Some(pos) = world.get(self.player_id).map(|e| e.pos) else {
+            return Transition::Reset(Box::new(PlayerTurnState::new(Coordinate::center())));
+        };
+        let Some(player) = world.players.get_mut(&self.player_id) else {
+            return Transition::Reset(Box::new(PlayerTurnState::new(Coordinate::center())));
+        };
+
         match key.code {
-            KeyCode::Char('s') => {
-                world.move_to(self.player_id, self.prev_pos);
-                return Some(Box::new(PlayerSelectedState::new(
-                    self.prev_pos,
-                    self.player_id,
-                )));
-            }
-            KeyCode::Up => {
-                self.selected_item -= 1;
-                if self.selected_item < 0 {
-                    self.selected_item = self.actions.len() as i32 - 1;
-                };
-            }
-            KeyCode::Down => {
-                self.selected_item = (self.selected_item as i32 + 1) % self.actions.len() as i32;
-            }
-            _ => (),
+            KeyCode::Up => self.selected_item = (self.selected_item + n - 1) % n,
+            KeyCode::Down => self.selected_item = (self.selected_item + 1) % n,
+            KeyCode::Char('s') => return Transition::Pop,
+            KeyCode::Char('a') => match self.actions[self.selected_item].as_str() {
+                "End" => {
+                    player.acted = true;
+                    return Transition::Reset(Box::new(PlayerTurnState::new(pos)));
+                }
+                _ => {}
+            },
+            _ => {}
         }
-        None
+        Transition::None
     }
 
-    fn renderables(&self) -> Vec<Renderable> {
+    fn renderables(&self, world: &World) -> Vec<Renderable> {
+        let Some(player) = world.get(self.player_id) else {
+            return Vec::<Renderable>::new();
+        };
         vec![Renderable {
-            pos: self.prev_pos,
+            pos: player.prev_pos,
             glyph: "X ".to_string(),
             color: Color::Red,
             layer: BackgroundUi,
@@ -91,13 +79,29 @@ impl Phase for ActionMenuState {
             .split(area);
 
         frame.render_widget(
-            Paragraph::new(self.player.name.clone()).block(Block::default()),
+            Paragraph::new("self.player.name.clone()")
+                .block(Block::default())
+                .style(Style::default().fg(Color::White)),
             data_layout[0],
         );
 
-        frame.render_widget(
-            List::new(self.actions.iter().map(|s| s.clone())).block(Block::default()),
+        let mut state = ListState::default().with_selected(Some(self.selected_item));
+        frame.render_stateful_widget(
+            List::new(self.actions.iter().map(|s| s.clone()))
+                .block(Block::default())
+                .style(Style::default().fg(Color::White))
+                .highlight_symbol("> ")
+                .highlight_style(Style::default().fg(Color::Yellow)),
             data_layout[1],
+            &mut state,
         );
+    }
+
+    fn theme(&self) -> UiTheme {
+        UiTheme {
+            field_color: Color::White,
+            menu_color: Color::Yellow,
+            ..Default::default()
+        }
     }
 }

@@ -3,7 +3,7 @@ use strum::{AsRefStr, Display};
 
 use crate::types::{coordinate::Coordinate, glyphs, layer::Layer};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct EntityId(pub i32);
 
 impl std::fmt::Display for EntityId {
@@ -17,6 +17,7 @@ pub struct Entity {
     pub id: EntityId,
     pub kind: EntityKind,
     pub pos: Coordinate,
+    pub prev_pos: Coordinate,
     pub color: Color,
     pub layer: Layer,
 }
@@ -29,6 +30,23 @@ pub enum EntityKind {
 }
 
 impl Entity {
+    pub fn new(
+        id: EntityId,
+        kind: EntityKind,
+        pos: Coordinate,
+        color: Color,
+        layer: Layer,
+    ) -> Self {
+        Self {
+            id,
+            kind,
+            pos,
+            prev_pos: pos,
+            color,
+            layer,
+        }
+    }
+
     pub fn glyph_and_color(&self) -> (String, Color) {
         let glyph = match self.kind {
             EntityKind::Player(num) => glyphs::player(num),

@@ -3,12 +3,13 @@ use std::collections::HashMap;
 use ratatui::style::Color;
 
 use crate::{
-    log, types::{Coordinate, Entity, EntityId, EntityKind, Layer, Player},
+    log,
+    types::{Coordinate, Entity, EntityId, EntityKind, Layer, Player, Renderable},
 };
 
 pub struct World {
     pub entities: HashMap<EntityId, Entity>,
-    pub players: Vec<Player>,
+    pub players: HashMap<EntityId, Player>,
     next_id: i32,
     pub grid: HashMap<Coordinate, Vec<Entity>>,
 }
@@ -18,7 +19,7 @@ impl World {
         Self {
             grid: HashMap::new(),
             entities: HashMap::new(),
-            players: Vec::new(),
+            players: HashMap::new(),
             next_id: 1,
         }
     }
@@ -30,13 +31,7 @@ impl World {
         color: Color,
     ) -> EntityId {
         let id = EntityId(self.get_next_id());
-        let entity = Entity {
-            id,
-            pos,
-            kind,
-            color,
-            layer,
-        };
+        let entity = Entity::new(id, kind, pos, color, layer);
 
         self.entities.insert(entity.id, entity);
         self.grid.entry(pos).or_default().push(entity);
@@ -73,6 +68,7 @@ impl World {
             return;
         };
         let from = entity.pos;
+        entity.prev_pos = from;
         entity.pos = to.clone();
 
         // Update grid position index
@@ -99,5 +95,15 @@ impl World {
         self.next_id += 1;
 
         return id;
+    }
+
+    pub fn renderable(&self, e: &Entity) -> Renderable {
+        let mut r = Renderable::from(e);
+        if matches!(e.kind, EntityKind::Player(_))
+            && self.players.get(&e.id).is_some_and(|p| p.acted)
+        {
+            r.color = Color::Rgb(150, 150, 150);
+        }
+        r
     }
 }

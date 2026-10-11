@@ -3,13 +3,15 @@ use std::collections::HashMap;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Flex, Layout, Margin, Rect},
-    style::{Color, Style},
+    style::Style,
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Paragraph},
 };
 
 use crate::{
-    app::{App, AppState}, game::Game, types::{EntityKind::Player, Layer::ForegroundUi, Renderable, coordinate::Coordinate, glyphs},
+    app::{App, AppState},
+    game::Game,
+    types::{EntityKind::Player, Layer::ForegroundUi, Renderable, coordinate::Coordinate, glyphs},
 };
 
 pub const GRID_WIDTH: u16 = 44;
@@ -32,7 +34,7 @@ pub fn render_game(game: &Game, frame: &mut Frame) {
     let blink = frame.count() % 4 > 1;
 
     let mut renderables: HashMap<Coordinate, Vec<Renderable>> = HashMap::new();
-    for r in game.phase.renderables() {
+    for r in game.phases.renderables(&game.world) {
         renderables.entry(r.pos).or_default().push(r);
     }
 
@@ -48,7 +50,7 @@ pub fn render_game(game: &Game, frame: &mut Frame) {
             let top_renderable = game
                 .world
                 .at(pos)
-                .map(Renderable::from)
+                .map(|e| game.world.renderable(e))
                 .chain(renderables.get(&pos).into_iter().flatten().cloned())
                 .filter(|e| !(should_blink && matches!(e.layer, ForegroundUi)))
                 .max_by_key(|e| e.layer);
@@ -95,6 +97,14 @@ pub fn render_game(game: &Game, frame: &mut Frame) {
     ])
     .areas(top);
 
+    let inner_menu = menu_area.inner(Margin::new(2, 1));
+    // game.phases.render(frame, field_area, menu_area, hud_area);
+    game.phases.render(frame, inner_menu);
+    let Some(phase) = game.phases.current() else {
+        return;
+    };
+    let theme = phase.theme();
+
     frame.render_widget(
         Paragraph::new(lines)
             .block(
@@ -102,9 +112,9 @@ pub fn render_game(game: &Game, frame: &mut Frame) {
                     .title(" Field ")
                     .title_alignment(Alignment::Center)
                     .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded),
+                    .border_type(BorderType::Rounded)
+                    .border_style(Style::default().fg(theme.field_color)),
             )
-            .style(Style::default().fg(Color::Yellow))
             .alignment(Alignment::Center),
         field_area,
     );
@@ -115,21 +125,19 @@ pub fn render_game(game: &Game, frame: &mut Frame) {
                 .title(" Menu ")
                 .title_alignment(Alignment::Center)
                 .borders(Borders::ALL)
-                .border_type(BorderType::Rounded),
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(theme.menu_color)),
         ),
         menu_area,
     );
-
-    let inner_menu = menu_area.inner(Margin::new(2, 1));
-
-    game.phase.render_menu(frame, inner_menu);
 
     frame.render_widget(
         Paragraph::new("").block(
             Block::default()
                 .title(" HUD ")
                 .borders(Borders::ALL)
-                .border_type(BorderType::Rounded),
+                .border_type(BorderType::Rounded)
+                .border_style(Style::default().fg(theme.hud_color)),
         ),
         hud_area,
     );
