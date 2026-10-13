@@ -28,7 +28,7 @@ impl PlayerTurnState {
         world
             .at(pos)
             .map(|e| e.id)
-            .find(|id| world.players.get(id).is_some_and(|p| !p.acted))
+            .find(|id| world.cats.get(id).is_some_and(|p| !p.acted))
             .map_or(Transition::None, |id| {
                 Transition::Push(Box::new(PlayerSelectedState::new(pos, id)))
             })

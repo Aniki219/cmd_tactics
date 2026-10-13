@@ -2,42 +2,42 @@ use ratatui::style::Color;
 use serde::Deserialize;
 
 use crate::{
-    types::{Coordinate, EntityKind, Layer, Player},
+    types::{Cat, Coordinate, EntityKind, Layer},
     world::World,
 };
 
-pub const PLAYER_COLORS: [Color; 10] = [
-    Color::Red,
+pub const CAT_COLORS: [Color; 10] = [
     Color::Yellow,
     Color::Green,
     Color::Blue,
     Color::Magenta,
-    Color::LightRed,
     Color::LightYellow,
     Color::LightGreen,
     Color::LightBlue,
     Color::LightMagenta,
+    Color::LightRed,
+    Color::Red,
 ];
 
 #[derive(Debug, Deserialize)]
-pub struct PlayerToml {
-    pub player: Vec<PlayerData>,
+pub struct CatToml {
+    pub cat: Vec<CatData>,
 }
 
 #[derive(Debug, Deserialize, Clone)]
-pub struct PlayerData {
+pub struct CatData {
     pub name: String,
     pub health: i32,
     pub pos: Coordinate,
 }
 
-pub fn add_player(world: &mut World, data: PlayerData) {
+pub fn add_cat(world: &mut World, data: CatData) {
     let id = world.spawn(
-        EntityKind::Player(world.players.len() as i32 + 1),
+        EntityKind::Cat(world.cats.len() as i32 + 1),
         data.pos,
         Layer::Entity,
-        PLAYER_COLORS[world.players.len() % PLAYER_COLORS.len()],
+        CAT_COLORS[world.cats.len() % CAT_COLORS.len()],
     );
 
-    world.players.insert(id, Player::new(id, data));
+    world.cats.insert(id, Cat::new(id, data));
 }

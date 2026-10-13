@@ -16,15 +16,15 @@ use crate::{
 pub const ACTION_MENU_ITEMS: [&str; 3] = ["Attack", "Skill", "End"];
 
 pub struct ActionMenuState {
-    player_id: EntityId,
+    cat_id: EntityId,
     selected_item: usize,
     actions: Vec<String>,
 }
 
 impl ActionMenuState {
-    pub fn new(player_id: EntityId, actions: &[&str]) -> Self {
+    pub fn new(cat_id: EntityId, actions: &[&str]) -> Self {
         Self {
-            player_id,
+            cat_id,
             selected_item: 0,
             actions: actions.to_strings(),
         }
@@ -34,10 +34,10 @@ impl ActionMenuState {
 impl Phase for ActionMenuState {
     fn handle_input(&mut self, key: crossterm::event::KeyEvent, world: &mut World) -> Transition {
         let n = self.actions.len();
-        let Some(pos) = world.get(self.player_id).map(|e| e.pos) else {
+        let Some(pos) = world.get(self.cat_id).map(|e| e.pos) else {
             return Transition::Reset(Box::new(PlayerTurnState::new(Coordinate::center())));
         };
-        let Some(player) = world.players.get_mut(&self.player_id) else {
+        let Some(cat) = world.cats.get_mut(&self.cat_id) else {
             return Transition::Reset(Box::new(PlayerTurnState::new(Coordinate::center())));
         };
 
@@ -47,7 +47,7 @@ impl Phase for ActionMenuState {
             KeyCode::Char('s') => return Transition::Pop,
             KeyCode::Char('a') => match self.actions[self.selected_item].as_str() {
                 "End" => {
-                    player.acted = true;
+                    cat.acted = true;
                     return Transition::Reset(Box::new(PlayerTurnState::new(pos)));
                 }
                 _ => {}
@@ -58,11 +58,11 @@ impl Phase for ActionMenuState {
     }
 
     fn renderables(&self, world: &World) -> Vec<Renderable> {
-        let Some(player) = world.get(self.player_id) else {
+        let Some(cat) = world.get(self.cat_id) else {
             return Vec::<Renderable>::new();
         };
         vec![Renderable {
-            pos: player.prev_pos,
+            pos: cat.prev_pos,
             glyph: "X ".to_string(),
             color: Color::Red,
             layer: BackgroundUi,
@@ -79,7 +79,7 @@ impl Phase for ActionMenuState {
             .split(area);
 
         frame.render_widget(
-            Paragraph::new("self.player.name.clone()")
+            Paragraph::new("self.cat.name.clone()")
                 .block(Block::default())
                 .style(Style::default().fg(Color::White)),
             data_layout[0],

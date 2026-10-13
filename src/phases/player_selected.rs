@@ -49,7 +49,7 @@ impl PlayerSelectedState {
                 )));
             };
 
-            Transition::Pop // Invalid tile returns to player turn
+            Transition::Pop // Invalid tile returns to cat turn
         }
     }
 }
@@ -89,7 +89,7 @@ impl Phase for PlayerSelectedState {
         match key.code {
             // Pressing A on a MoveTile should move you there
             // on an Entity should do nothing
-            // on an empty tile should cancel the move command and return to PlayerTurn
+            // on an empty tile should cancel the move command and return to catTurn
             KeyCode::Char('a') => self.confirm(world),
             KeyCode::Char('s') => Transition::Pop,
 

@@ -1,6 +1,6 @@
 use std::char;
 
-pub fn player(num: i32) -> String {
+pub fn cat(num: i32) -> String {
     let code_point = 0x2460 + ((num - 1) as u32);
 
     char::from_u32(code_point).map(|c| c.to_string()).unwrap() + " "

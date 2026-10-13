@@ -4,12 +4,13 @@ use ratatui::style::Color;
 
 use crate::{
     log,
-    types::{Coordinate, Entity, EntityId, EntityKind, Layer, Player, Renderable},
+    types::{Coordinate, Entity, EntityId, EntityKind, Layer, Cat, Renderable},
 };
 
 pub struct World {
     pub entities: HashMap<EntityId, Entity>,
-    pub players: HashMap<EntityId, Player>,
+    pub cats: HashMap<EntityId, Cat>,
+    pub enemies: HashMap<EntityId, Cat>,
     next_id: i32,
     pub grid: HashMap<Coordinate, Vec<Entity>>,
 }
@@ -19,7 +20,8 @@ impl World {
         Self {
             grid: HashMap::new(),
             entities: HashMap::new(),
-            players: HashMap::new(),
+            cats: HashMap::new(),
+            enemies: HashMap::new(),
             next_id: 1,
         }
     }
@@ -99,8 +101,8 @@ impl World {
 
     pub fn renderable(&self, e: &Entity) -> Renderable {
         let mut r = Renderable::from(e);
-        if matches!(e.kind, EntityKind::Player(_))
-            && self.players.get(&e.id).is_some_and(|p| p.acted)
+        if matches!(e.kind, EntityKind::Cat(_))
+            && self.cats.get(&e.id).is_some_and(|p| p.acted)
         {
             r.color = Color::Rgb(150, 150, 150);
         }

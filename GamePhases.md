@@ -1,5 +1,5 @@
 # Game UI Layout
-We have a playing field where the player selects actions with a moveable cursor and where the game takes place. A right bar for dynamic game information such as menu options or display data. And a bottom bar showing HUD information about the player's characters like health and status.
+We have a playing field where the cat selects actions with a moveable cursor and where the game takes place. A right bar for dynamic game information such as menu options or display data. And a bottom bar showing HUD information about the cat's characters like health and status.
 
 ## Playing Field (Map)
 - Grid with entities
@@ -17,25 +17,25 @@ We have a playing field where the player selects actions with a moveable cursor 
 
 ## Bottom Footer
 
-Displays information about the player's characters
+Displays information about the cat's characters
 - health
 - status
 - hot key / color / glyph
 
 # Game Phases
 
-## Player Turn
+## cat Turn
 Nothing selected
 Move Cursor Around
 Select Units with number keys
 Press A on Entity to select it
-- Player -> PlayerSelected
+- cat -> catSelected
 - Enemy -> Open Stats on overlay UI
 Press A on field to open game menu
 
-## Player Selected
+## cat Selected
 Display move tiles
-Cursor snaps to player on phase start
+Cursor snaps to cat on phase start
 Cursor can select move tile with A
 Input B to cancel selection
 
@@ -46,7 +46,7 @@ Close Menu
 ## Enemy Turn
 Enemies move themselves
 
-Player Turn <-> Player Selected + Command Menu Displayed on side bar
+cat Turn <-> cat Selected + Command Menu Displayed on side bar
 |
 Game Menu Opened -> Enemy Turn
 |

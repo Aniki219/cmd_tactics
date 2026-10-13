@@ -8,7 +8,7 @@ use crate::{
         init_game::InitGame,
         player_turn::PlayerTurnState,
     },
-    setup::{PlayerToml, add_player},
+    setup::{CatToml, add_cat},
     types::{Coordinate, EntityId},
     util::load::load_toml,
     world::World,
@@ -27,19 +27,19 @@ impl Game {
     }
 
     pub fn init(&mut self) {
-        log!("Spawning players");
-        match load_toml::<PlayerToml>("data/players.toml") {
-            Ok(player_toml) => {
-                for player_data in player_toml.player {
+        log!("Spawning cats");
+        match load_toml::<CatToml>("data/cats.toml") {
+            Ok(cat_toml) => {
+                for cat_data in cat_toml.cat {
                     log!(
-                        "Spawning player {} hp: {}",
-                        player_data.name,
-                        player_data.health
+                        "Spawning cat {} hp: {}",
+                        cat_data.name,
+                        cat_data.health
                     );
-                    add_player(&mut self.world, player_data);
+                    add_cat(&mut self.world, cat_data);
                 }
             }
-            Err(e) => log!("Failed to load players.toml: {}", e),
+            Err(e) => log!("Failed to load cats.toml: {}", e),
         }
 
         let test_string = "start";
@@ -48,7 +48,7 @@ impl Game {
             "start" => {
                 let start = self
                     .world
-                    .players
+                    .cats
                     .iter()
                     .min_by_key(|k| k.0)
                     .and_then(|(id, _)| self.world.get(*id))
@@ -61,7 +61,7 @@ impl Game {
                 self.phases.reset(
                     Box::new(ActionMenuState::new(
                         self.world
-                            .players
+                            .cats
                             .iter()
                             .min_by_key(|k| k.0)
                             .map(|(id, _)| *id)

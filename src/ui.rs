@@ -11,7 +11,7 @@ use ratatui::{
 use crate::{
     app::{App, AppState},
     game::Game,
-    types::{EntityKind::Player, Layer::ForegroundUi, Renderable, coordinate::Coordinate, glyphs},
+    types::{EntityKind::Cat, Layer::ForegroundUi, Renderable, coordinate::Coordinate, glyphs},
 };
 
 pub const GRID_WIDTH: u16 = 44;
@@ -46,7 +46,7 @@ pub fn render_game(game: &Game, frame: &mut Frame) {
         for x in (0..GRID_WIDTH).step_by(2) {
             let pos = Coordinate(x as i32 / 2, y as i32);
 
-            let should_blink = blink && game.world.at(pos).any(|e| matches!(e.kind, Player(_)));
+            let should_blink = blink && game.world.at(pos).any(|e| matches!(e.kind, Cat(_)));
             let top_renderable = game
                 .world
                 .at(pos)
