@@ -8,7 +8,6 @@ pub struct App {
     pub state: AppState,
 }
 
-
 pub enum AppState {
     MainMenu(),
     InGame(Game),
@@ -31,12 +30,17 @@ impl App {
         }
     }
 
-    pub fn tick(&self) {}
+    pub fn tick(&mut self) {
+        match &mut self.state {
+            AppState::InGame(game) => game.tick(),
+            _ => (),
+        }
+    }
 
     pub fn handle_input(&mut self, key_event: KeyEvent) {
         match &mut self.state {
             AppState::InGame(game) => game.handle_input(key_event),
-            _ => ()
+            _ => (),
         }
         match key_event.code {
             KeyCode::Esc | KeyCode::Char('q') => self.quit(),

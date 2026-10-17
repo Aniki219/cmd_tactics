@@ -5,10 +5,11 @@ use crate::{
     phases::{
         PhaseStack,
         action_menu::{ACTION_MENU_ITEMS, ActionMenuState},
+        enemy_turn::EnemyTurnState,
         init_game::InitGame,
         player_turn::PlayerTurnState,
     },
-    setup::{CatToml, add_cat},
+    setup::{CatToml, add_enemy_cat, add_player_cat},
     types::{Coordinate, EntityId},
     util::load::load_toml,
     world::World,
@@ -31,24 +32,24 @@ impl Game {
         match load_toml::<CatToml>("data/cats.toml") {
             Ok(cat_toml) => {
                 for cat_data in cat_toml.cat {
-                    log!(
-                        "Spawning cat {} hp: {}",
-                        cat_data.name,
-                        cat_data.health
-                    );
-                    add_cat(&mut self.world, cat_data);
+                    log!("Spawning cat {} hp: {}", cat_data.name, cat_data.health);
+                    add_player_cat(&mut self.world, cat_data);
+                }
+                for cat_data in cat_toml.enemy {
+                    log!("Spawning enemy {} hp: {}", cat_data.name, cat_data.health);
+                    add_enemy_cat(&mut self.world, cat_data);
                 }
             }
             Err(e) => log!("Failed to load cats.toml: {}", e),
         }
 
-        let test_string = "start";
+        let test_string = "enemy";
 
         match test_string {
             "start" => {
                 let start = self
                     .world
-                    .cats
+                    .players
                     .iter()
                     .min_by_key(|k| k.0)
                     .and_then(|(id, _)| self.world.get(*id))
@@ -61,7 +62,7 @@ impl Game {
                 self.phases.reset(
                     Box::new(ActionMenuState::new(
                         self.world
-                            .cats
+                            .players
                             .iter()
                             .min_by_key(|k| k.0)
                             .map(|(id, _)| *id)
@@ -71,6 +72,10 @@ impl Game {
                     &mut self.world,
                 );
             }
+            "enemy" => {
+                self.phases
+                    .reset(Box::new(EnemyTurnState::new(&self.world)), &mut self.world);
+            }
             _ => {
                 log!("No test_string to pick phase");
             }
@@ -79,5 +84,9 @@ impl Game {
 
     pub fn handle_input(&mut self, key: KeyEvent) {
         self.phases.handle_input(key, &mut self.world);
+    }
+
+    pub fn tick(&mut self) {
+        self.phases.tick(&mut self.world);
     }
 }

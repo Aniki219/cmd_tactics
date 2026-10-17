@@ -13,4 +13,9 @@ impl Coordinate {
     pub fn plus(self, other: Coordinate) -> Coordinate {
         Coordinate(self.0 + other.0, self.1 + other.1)
     }
+
+    // Number of steps to get from this coord to another coord
+    pub fn dist(self, other: Coordinate) -> i32 {
+        (self.0 - other.0).abs() + (self.1 - other.1).abs()
+    }
 }

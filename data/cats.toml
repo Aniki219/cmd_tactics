@@ -2,13 +2,34 @@
 name = "charmander"
 health = 10
 pos = [4, 4]
+speed = 4
 
 [[cat]]
 name = "squirtle"
 health = 15
 pos = [5, 4]
+speed = 5
 
 [[cat]]
 name = "bulbasaur"
 health = 20
 pos = [6, 4]
+speed = 3
+
+[[enemy]]
+name = "bulbasaur"
+health = 20
+pos = [16, 4]
+speed = 4
+
+[[enemy]]
+name = "bulbasaur"
+health = 20
+pos = [16, 14]
+speed = 4
+
+[[enemy]]
+name = "bulbasaur"
+health = 20
+pos = [12, 10]
+speed = 4

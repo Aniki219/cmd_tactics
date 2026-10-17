@@ -35,7 +35,9 @@ fn main() -> Result<()> {
         tui.draw(&mut app)?;
         // Handle events.
         match tui.events.next()? {
-            Event::Tick => {}
+            Event::Tick => {
+                app.tick();
+            }
             Event::Key(key_event) => {
                 app.handle_input(key_event);
             }

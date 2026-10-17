@@ -25,7 +25,7 @@ pub struct Entity {
 #[derive(Debug, Clone, Copy, Display, AsRefStr)]
 pub enum EntityKind {
     Cat(i32),
-    Enemy,
+    Enemy(i32),
     Wall,
 }
 
@@ -49,6 +49,7 @@ impl Entity {
     pub fn glyph_and_color(&self) -> (String, Color) {
         let glyph = match self.kind {
             EntityKind::Cat(num) => glyphs::cat(num),
+            EntityKind::Enemy(num) => glyphs::cat(num),
             _ => glyphs::EMPTY.to_string(),
         };
         (glyph, self.color)

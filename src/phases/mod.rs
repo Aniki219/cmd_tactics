@@ -4,6 +4,7 @@ use ratatui::{Frame, layout::Rect, style::Color};
 use crate::{log, types::Renderable, world::World};
 
 pub mod action_menu;
+pub mod enemy_turn;
 pub mod init_game;
 pub mod player_selected;
 pub mod player_turn;
@@ -15,6 +16,9 @@ pub trait Phase {
     }
     fn on_enter(&mut self, _world: &mut World) {}
     fn on_resume(&mut self, _world: &mut World) {}
+    fn on_tick(&mut self, _world: &mut World) -> Transition {
+        Transition::None
+    }
     fn on_exit(&mut self, _world: &mut World) {}
     fn handle_input(&mut self, key: KeyEvent, world: &mut World) -> Transition;
     fn renderables(&self, _world: &World) -> Vec<Renderable> {
@@ -73,6 +77,14 @@ impl PhaseStack {
             return;
         };
         let transition = top.handle_input(key, world);
+        self.apply(transition, world);
+    }
+
+    pub fn tick(&mut self, world: &mut World) {
+        let Some(top) = self.stack.last_mut() else {
+            return;
+        };
+        let transition = top.on_tick(world);
         self.apply(transition, world);
     }
 

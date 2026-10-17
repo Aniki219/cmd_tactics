@@ -59,8 +59,13 @@ impl Phase for PlayerSelectedState {
         let Some(origin) = world.get(self.selected).map(|e| e.pos) else {
             return;
         };
-        for i in -3..=3_i32 {
-            for j in -3..=3_i32 {
+        let Some(cat) = world.players.get(&self.selected) else {
+            return;
+        };
+        let step = cat.data.speed;
+
+        for i in -step..=step {
+            for j in -step..=step {
                 if i.abs() + j.abs() < 4 && !(i == 0 && j == 0) {
                     self.tiles.push(Renderable {
                         pos: origin.plus(Coordinate(i, j)),

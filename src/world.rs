@@ -9,7 +9,7 @@ use crate::{
 
 pub struct World {
     pub entities: HashMap<EntityId, Entity>,
-    pub cats: HashMap<EntityId, Cat>,
+    pub players: HashMap<EntityId, Cat>,
     pub enemies: HashMap<EntityId, Cat>,
     next_id: i32,
     pub grid: HashMap<Coordinate, Vec<Entity>>,
@@ -20,7 +20,7 @@ impl World {
         Self {
             grid: HashMap::new(),
             entities: HashMap::new(),
-            cats: HashMap::new(),
+            players: HashMap::new(),
             enemies: HashMap::new(),
             next_id: 1,
         }
@@ -102,7 +102,7 @@ impl World {
     pub fn renderable(&self, e: &Entity) -> Renderable {
         let mut r = Renderable::from(e);
         if matches!(e.kind, EntityKind::Cat(_))
-            && self.cats.get(&e.id).is_some_and(|p| p.acted)
+            && self.players.get(&e.id).is_some_and(|p| p.acted)
         {
             r.color = Color::Rgb(150, 150, 150);
         }

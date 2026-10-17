@@ -7,7 +7,9 @@ use ratatui::{
 };
 
 use crate::{
-    phases::{Phase, Transition, UiTheme, player_turn::PlayerTurnState},
+    phases::{
+        Phase, Transition, UiTheme, player_turn::PlayerTurnState,
+    },
     types::{Coordinate, EntityId, Layer::BackgroundUi, Renderable},
     util::helpers::ToVecString,
     world::World,
@@ -37,8 +39,8 @@ impl Phase for ActionMenuState {
         let Some(pos) = world.get(self.cat_id).map(|e| e.pos) else {
             return Transition::Reset(Box::new(PlayerTurnState::new(Coordinate::center())));
         };
-        let Some(cat) = world.cats.get_mut(&self.cat_id) else {
-            return Transition::Reset(Box::new(PlayerTurnState::new(Coordinate::center())));
+        let Some(cat) = world.players.get_mut(&self.cat_id) else {
+            return Transition::Reset(Box::new(PlayerTurnState::new(pos)));
         };
 
         match key.code {

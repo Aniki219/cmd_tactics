@@ -2,7 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::style::Color::White;
 
 use crate::{
-    phases::{Phase, Transition, player_selected::PlayerSelectedState},
+    phases::{Phase, Transition, enemy_turn::EnemyTurnState, player_selected::PlayerSelectedState},
     types::{Layer::ForegroundUi, *},
     world::World,
 };
@@ -28,7 +28,7 @@ impl PlayerTurnState {
         world
             .at(pos)
             .map(|e| e.id)
-            .find(|id| world.cats.get(id).is_some_and(|p| !p.acted))
+            .find(|id| world.players.get(id).is_some_and(|p| !p.acted))
             .map_or(Transition::None, |id| {
                 Transition::Push(Box::new(PlayerSelectedState::new(pos, id)))
             })
@@ -44,6 +44,7 @@ impl Phase for PlayerTurnState {
 
         match key.code {
             KeyCode::Char('a') => self.select(world),
+            KeyCode::Char(' ') => Transition::Replace(Box::new(EnemyTurnState::new(&world))),
 
             KeyCode::Char(c) if c.is_ascii_digit() => {
                 if let Some(digit) = c.to_digit(10) {
