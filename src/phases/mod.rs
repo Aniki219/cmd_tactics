@@ -8,6 +8,7 @@ pub mod enemy_turn;
 pub mod init_game;
 pub mod player_selected;
 pub mod player_turn;
+pub mod player_attack;
 
 pub trait Phase {
     fn name(&self) -> &str {
@@ -34,6 +35,7 @@ pub enum Transition {
     None,
     Push(Box<dyn Phase>),
     Pop,
+    PopN(i32),
     Replace(Box<dyn Phase>),
     Reset(Box<dyn Phase>),
 }
@@ -126,6 +128,19 @@ impl PhaseStack {
                         log!("Resuming {}", next.name());
                         next.on_resume(world);
                     }
+                }
+            }
+            Transition::PopN(mut n) => {
+                while self.stack.len() > 1 && n > 0 {
+                    if let Some(mut old) = self.stack.pop() {
+                        log!("Pop Transition {}", old.name());
+                        old.on_exit(world);
+                    }
+                    if let Some(next) = self.stack.last_mut() {
+                        log!("Resuming {}", next.name());
+                        next.on_resume(world);
+                    }
+                    n -= 1;
                 }
             }
             Transition::Replace(mut next) => {

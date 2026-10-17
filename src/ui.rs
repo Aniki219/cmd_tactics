@@ -11,7 +11,7 @@ use ratatui::{
 use crate::{
     app::{App, AppState},
     game::Game,
-    types::{EntityKind::Cat, Layer::ForegroundUi, Renderable, coordinate::Coordinate, glyphs},
+    types::{Layer::ForegroundUi, Renderable, coordinate::Coordinate, glyphs},
 };
 
 pub const GRID_WIDTH: u16 = 44;
@@ -46,13 +46,12 @@ pub fn render_game(game: &Game, frame: &mut Frame) {
         for x in (0..GRID_WIDTH).step_by(2) {
             let pos = Coordinate(x as i32 / 2, y as i32);
 
-            let should_blink = blink && game.world.at(pos).any(|e| matches!(e.kind, Cat(_)));
             let top_renderable = game
                 .world
                 .at(pos)
                 .map(|e| game.world.renderable(e))
                 .chain(renderables.get(&pos).into_iter().flatten().cloned())
-                .filter(|e| !(should_blink && matches!(e.layer, ForegroundUi)))
+                .filter(|r| !(r.blink && blink && matches!(r.layer, ForegroundUi)))
                 .max_by_key(|e| e.layer);
             if let Some(renderable) = top_renderable {
                 if !empty_buffer.is_empty() {
@@ -82,10 +81,11 @@ pub fn render_game(game: &Game, frame: &mut Frame) {
         .areas(frame.area());
 
     // Rows: field/data row, flexible gap, HUD footer
-    let [top, _gap, hud_area] = Layout::vertical([
-        Constraint::Length(field_h),
+    let [_, top, hud_area, _] = Layout::vertical([
         Constraint::Fill(1),
+        Constraint::Length(field_h),
         Constraint::Length(HUD_HEIGHT),
+        Constraint::Fill(1),
     ])
     .areas(root);
 

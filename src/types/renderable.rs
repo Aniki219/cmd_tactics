@@ -7,6 +7,7 @@ pub struct Renderable {
     pub glyph: String,
     pub color: Color,
     pub layer: Layer,
+    pub blink: bool,
 }
 
 impl From<&Entity> for Renderable {
@@ -17,6 +18,7 @@ impl From<&Entity> for Renderable {
             glyph,
             color,
             layer: e.layer,
+            blink: false,
         }
     }
 }

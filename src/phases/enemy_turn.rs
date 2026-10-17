@@ -124,7 +124,7 @@ impl Phase for EnemyTurnState {
     }
 
     fn on_tick(&mut self, world: &mut World) -> Transition {
-        if self.delay < 2 {
+        if self.delay < 1 {
             self.delay += 1;
             return Transition::None;
         }
@@ -136,5 +136,9 @@ impl Phase for EnemyTurnState {
         self.delay = 0;
 
         Transition::None
+    }
+
+    fn on_enter(&mut self, world: &mut World) {
+        world.players.iter_mut().for_each(|(_, c)| c.acted = false);
     }
 }

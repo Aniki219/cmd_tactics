@@ -27,6 +27,7 @@ impl PlayerSelectedState {
                 glyph: String::from("[]"),
                 color: White,
                 layer: ForegroundUi,
+                blink: false,
             },
             selected,
             tiles: Vec::new(),
@@ -37,7 +38,7 @@ impl PlayerSelectedState {
         {
             if world
                 .at(self.cursor.pos)
-                .any(|e| matches!(e.layer, Layer::Entity))
+                .any(|e| e.id != self.selected && matches!(e.layer, Layer::Entity))
             {
                 return Transition::None;
             };
@@ -66,12 +67,13 @@ impl Phase for PlayerSelectedState {
 
         for i in -step..=step {
             for j in -step..=step {
-                if i.abs() + j.abs() < 4 && !(i == 0 && j == 0) {
+                if i.abs() + j.abs() < 4 {
                     self.tiles.push(Renderable {
                         pos: origin.plus(Coordinate(i, j)),
                         glyph: String::from("* "),
                         color: White,
                         layer: BackgroundUi,
+                        blink: false,
                     });
                 }
             }
@@ -88,6 +90,9 @@ impl Phase for PlayerSelectedState {
     fn handle_input(&mut self, key: KeyEvent, world: &mut World) -> Transition {
         let mut move_cursor = |x, y| {
             self.cursor.pos = self.cursor.pos.plus(Coordinate(x, y));
+
+            // If the cursor moves ontop of an Entity it should blink
+            self.cursor.blink = world.at(self.cursor.pos).any(|_| true);
             return Transition::None;
         };
 

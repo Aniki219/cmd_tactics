@@ -8,9 +8,10 @@ use ratatui::{
 
 use crate::{
     phases::{
-        Phase, Transition, UiTheme, player_turn::PlayerTurnState,
+        Phase, Transition, UiTheme, enemy_turn::EnemyTurnState, player_attack::PlayerAttackState,
+        player_turn::PlayerTurnState,
     },
-    types::{Coordinate, EntityId, Layer::BackgroundUi, Renderable},
+    types::{Coordinate, EntityId, EntityKind, Layer::BackgroundUi, Renderable},
     util::helpers::ToVecString,
     world::World,
 };
@@ -18,7 +19,7 @@ use crate::{
 pub const ACTION_MENU_ITEMS: [&str; 3] = ["Attack", "Skill", "End"];
 
 pub struct ActionMenuState {
-    cat_id: EntityId,
+    cat_id: EntityId, // EntityId of the cat performing the action
     selected_item: usize,
     actions: Vec<String>,
 }
@@ -48,8 +49,34 @@ impl Phase for ActionMenuState {
             KeyCode::Down => self.selected_item = (self.selected_item + 1) % n,
             KeyCode::Char('s') => return Transition::Pop,
             KeyCode::Char('a') => match self.actions[self.selected_item].as_str() {
+                "Attack" => {
+                    let Some(first_target_pos) = [
+                        Coordinate(1, 0),
+                        Coordinate(-1, 0),
+                        Coordinate(0, -1),
+                        Coordinate(0, 1),
+                    ]
+                    .iter()
+                    .find_map(|c| {
+                        world
+                            .at(pos.plus(*c))
+                            .find(|e| matches!(e.kind, EntityKind::Enemy(_)))
+                            .map(|e| e.pos)
+                    }) else {
+                        return Transition::None;
+                    };
+                    return Transition::Push(Box::new(PlayerAttackState::new(
+                        self.cat_id,
+                        pos,
+                        first_target_pos,
+                    )));
+                }
                 "End" => {
                     cat.acted = true;
+
+                    if world.players.iter().all(|(_, cat)| cat.acted) {
+                        return Transition::Reset(Box::new(EnemyTurnState::new(world)));
+                    }
                     return Transition::Reset(Box::new(PlayerTurnState::new(pos)));
                 }
                 _ => {}
@@ -68,6 +95,7 @@ impl Phase for ActionMenuState {
             glyph: "X ".to_string(),
             color: Color::Red,
             layer: BackgroundUi,
+            blink: false,
         }]
     }
 

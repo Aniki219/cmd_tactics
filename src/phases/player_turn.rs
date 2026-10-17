@@ -19,6 +19,7 @@ impl PlayerTurnState {
                 glyph: String::from("[]"),
                 color: White,
                 layer: ForegroundUi,
+                blink: false,
             },
         }
     }
@@ -39,6 +40,9 @@ impl Phase for PlayerTurnState {
     fn handle_input(&mut self, key: KeyEvent, world: &mut World) -> Transition {
         let mut move_cursor = |x, y| {
             self.cursor.pos = self.cursor.pos.plus(Coordinate(x, y));
+
+            // If the cursor moves ontop of an Entity it should blink
+            self.cursor.blink = world.at(self.cursor.pos).any(|_| true);
             return Transition::None;
         };
 
