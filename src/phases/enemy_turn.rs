@@ -6,6 +6,7 @@ use crate::{
     phases::{
         Phase,
         Transition::{self},
+        end_turn::{EndTurnState, Turn},
         player_turn::PlayerTurnState,
     },
     types::{Cat, Coordinate, Entity, EntityId},
@@ -16,41 +17,50 @@ use crate::{
 const DIST_WEIGHT: i32 = 10;
 const STEP_WEIGHT: i32 = 1;
 
+pub enum EnemySubPhase {
+    Idle,
+    Moved,
+    Acted,
+    // I just made this, its time to split enemy actions
+    // into sub phases so we can delay between them
+    // Also we should use the Timer class here
+}
+
 pub struct EnemyTurnState {
-    queue: VecDeque<EntityId>,
+    enemy_ids: VecDeque<EntityId>,
+    // phase: EnemySubPhase
     delay: i32,
 }
 
 impl EnemyTurnState {
     pub fn new(world: &World) -> Self {
         Self {
-            queue: world.enemies.iter().map(|(id, _)| id.clone()).collect(),
+            enemy_ids: world.enemies.iter().map(|(id, _)| id.clone()).collect(),
             delay: 0,
         }
     }
 
-    fn move_and_attack(&mut self, id: &EntityId, world: &mut World) -> Transition {
-        let Some(entity) = world.entities.get(&id) else {
-            return Transition::None;
+    fn move_and_attack(&mut self, id: &EntityId, world: &mut World) {
+        let best_tile_coord = {
+            let Some(entity) = world.entities.get(&id) else {
+                return;
+            };
+            let Some(cat) = world.enemies.get(&id) else {
+                return;
+            };
+            self.calc_best_tile(entity, cat, world)
         };
-        let Some(cat) = world.enemies.get(&id) else {
-            return Transition::None;
-        };
-        let Some(best_tile_coord) = self.calc_best_tile(entity, cat, world) else {
-            return Transition::None;
+
+        let Some(best_tile_coord) = best_tile_coord else {
+            return;
         };
 
         self.move_to_best_tile(*id, best_tile_coord, world);
         self.attack_nearest_player(*id, world);
 
-        Transition::Reset(Box::new(PlayerTurnState::new(
-            world
-                .players
-                .iter()
-                .min_by_key(|(_, p)| p.id)
-                .and_then(|(_, p)| world.entities.get(&p.id))
-                .map_or(Coordinate::center(), |c| c.pos),
-        )))
+        if let Some(cat) = world.enemies.get_mut(&id) {
+            cat.acted = true;
+        };
     }
 
     fn calc_best_tile(&self, entity: &Entity, cat: &Cat, world: &World) -> Option<Coordinate> {
@@ -124,21 +134,26 @@ impl Phase for EnemyTurnState {
     }
 
     fn on_tick(&mut self, world: &mut World) -> Transition {
-        if self.delay < 1 {
+        // Wait until delay
+        if self.delay < 2 {
             self.delay += 1;
             return Transition::None;
         }
 
-        let Some(enemy_id) = self.queue.pop_front() else {
-            return Transition::Reset(Box::new(PlayerTurnState::new(Coordinate::center())));
-        };
-        self.move_and_attack(&enemy_id, world);
-        self.delay = 0;
+        // If there is another enemy in the deque move and attack with it
+        if let Some(enemy_id) = self.enemy_ids.pop_front() {
+            self.move_and_attack(&enemy_id, world);
+            self.delay = 0;
 
-        Transition::None
+            return Transition::None;
+        }
+
+        // No more enemies to move, end turn
+        return Transition::Reset(Box::new(EndTurnState::new(Turn::Enemy)));
     }
 
-    fn on_enter(&mut self, world: &mut World) {
+    fn on_enter(&mut self, world: &mut World) -> Transition {
         world.players.iter_mut().for_each(|(_, c)| c.acted = false);
+        Transition::None
     }
 }

@@ -4,7 +4,7 @@ use ratatui::style::Color;
 
 use crate::{
     log,
-    types::{Coordinate, Entity, EntityId, EntityKind, Layer, Cat, Renderable},
+    types::{Cat, Coordinate, Entity, EntityId, EntityKind, Layer, Renderable},
 };
 
 pub struct World {
@@ -101,11 +101,21 @@ impl World {
 
     pub fn renderable(&self, e: &Entity) -> Renderable {
         let mut r = Renderable::from(e);
-        if matches!(e.kind, EntityKind::Cat(_))
-            && self.players.get(&e.id).is_some_and(|p| p.acted)
+        if self
+            .players
+            .get(&e.id)
+            .or_else(|| self.enemies.get(&e.id))
+            .is_some_and(|p| p.acted)
         {
             r.color = Color::Rgb(150, 150, 150);
         }
         r
+    }
+
+    pub fn get_first_player(&self) -> Option<&Entity> {
+        self.players
+            .iter()
+            .min_by_key(|(_, p)| p.id)
+            .and_then(|(_, p)| self.entities.get(&p.id))
     }
 }

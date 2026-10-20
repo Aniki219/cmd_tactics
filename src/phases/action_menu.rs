@@ -1,19 +1,13 @@
 use crossterm::event::KeyCode;
 use ratatui::{
-    Frame,
-    layout::{Constraint, Direction::Vertical, Layout, Rect},
-    style::{Color, Style},
-    widgets::{Block, List, ListState, Paragraph},
+    Frame, buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Color, Style}, widgets::{List, ListState, Paragraph, StatefulWidget, Widget},
 };
 
 use crate::{
     phases::{
         Phase, Transition, UiTheme, enemy_turn::EnemyTurnState, player_attack::PlayerAttackState,
         player_turn::PlayerTurnState,
-    },
-    types::{Coordinate, EntityId, EntityKind, Layer::BackgroundUi, Renderable},
-    util::helpers::ToVecString,
-    world::World,
+    }, types::{Coordinate, EntityId, EntityKind, Layer::BackgroundUi, Renderable}, ui::Panels, util::helpers::ToVecString, world::World,
 };
 
 pub const ACTION_MENU_ITEMS: [&str; 3] = ["Attack", "Skill", "End"];
@@ -99,32 +93,28 @@ impl Phase for ActionMenuState {
         }]
     }
 
-    fn render_menu(&self, frame: &mut Frame, area: Rect) {
-        let data_layout = Layout::default()
-            .direction(Vertical)
-            .constraints([
-                Constraint::Length(3), // Space for the paragraph
-                Constraint::Min(1),    // Remaining space for the list
+    fn render(&self, world: &World, frame: &mut Frame, panels: &Panels) {
+        let Some(cat) = world.players.get(&self.cat_id) else { return };
+        panels.menu(|area| {
+            let [name_area, list_area] = Layout::vertical([
+                Constraint::Length(3),
+                Constraint::Min(1),
             ])
-            .split(area);
-
-        frame.render_widget(
-            Paragraph::new("self.cat.name.clone()")
-                .block(Block::default())
-                .style(Style::default().fg(Color::White)),
-            data_layout[0],
-        );
-
-        let mut state = ListState::default().with_selected(Some(self.selected_item));
-        frame.render_stateful_widget(
-            List::new(self.actions.iter().map(|s| s.clone()))
-                .block(Block::default())
-                .style(Style::default().fg(Color::White))
-                .highlight_symbol("> ")
-                .highlight_style(Style::default().fg(Color::Yellow)),
-            data_layout[1],
-            &mut state,
-        );
+            .areas(area);
+    
+            frame.render_widget(
+                Paragraph::new(cat.data.name.clone()).style(Style::default().fg(Color::White)),
+                name_area,
+            );
+    
+            frame.render_widget(
+                ActionMenu {
+                    items: &self.actions,
+                    selected: self.selected_item,
+                }, 
+                list_area
+            );
+        });
     }
 
     fn theme(&self) -> UiTheme {
@@ -133,5 +123,25 @@ impl Phase for ActionMenuState {
             menu_color: Color::Yellow,
             ..Default::default()
         }
+    }
+}
+
+pub struct ActionMenu<'a> {
+    pub items: &'a[String],
+    pub selected: usize,
+}
+
+impl Widget for ActionMenu<'_> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        let mut state = ListState::default().with_selected(Some(self.selected));
+        StatefulWidget::render(
+            List::new(self.items.iter().cloned())
+                .style(Style::default().fg(Color::White))
+                .highlight_symbol("> ")
+                .highlight_style(Style::default().fg(Color::Yellow)),
+            area,
+            buf,
+            &mut state,
+        );
     }
 }

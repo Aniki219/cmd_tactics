@@ -14,13 +14,13 @@ use crate::{
 };
 
 pub struct PlayerSelectedState {
+    cat_id: EntityId,
     cursor: Renderable,
-    selected: EntityId,
     tiles: Vec<Renderable>,
 }
 
 impl PlayerSelectedState {
-    pub fn new(cursor_pos: Coordinate, selected: EntityId) -> Self {
+    pub fn new(cursor_pos: Coordinate, cat_id: EntityId) -> Self {
         Self {
             cursor: Renderable {
                 pos: cursor_pos,
@@ -29,7 +29,7 @@ impl PlayerSelectedState {
                 layer: ForegroundUi,
                 blink: false,
             },
-            selected,
+            cat_id,
             tiles: Vec::new(),
         }
     }
@@ -38,14 +38,14 @@ impl PlayerSelectedState {
         {
             if world
                 .at(self.cursor.pos)
-                .any(|e| e.id != self.selected && matches!(e.layer, Layer::Entity))
+                .any(|e| e.id != self.cat_id && matches!(e.layer, Layer::Entity))
             {
                 return Transition::None;
             };
             if self.tiles.iter().any(|t| t.pos == self.cursor.pos) {
-                world.move_to(self.selected, self.cursor.pos);
+                world.move_to(self.cat_id, self.cursor.pos);
                 return Transition::Push(Box::new(ActionMenuState::new(
-                    self.selected,
+                    self.cat_id,
                     &ACTION_MENU_ITEMS,
                 )));
             };
@@ -56,12 +56,12 @@ impl PlayerSelectedState {
 }
 
 impl Phase for PlayerSelectedState {
-    fn on_enter(&mut self, world: &mut World) {
-        let Some(origin) = world.get(self.selected).map(|e| e.pos) else {
-            return;
+    fn on_enter(&mut self, world: &mut World) -> Transition{
+        let Some(origin) = world.get(self.cat_id).map(|e| e.pos) else {
+            return Transition::None;
         };
-        let Some(cat) = world.players.get(&self.selected) else {
-            return;
+        let Some(cat) = world.players.get(&self.cat_id) else {
+            return Transition::None;
         };
         let step = cat.data.speed;
 
@@ -77,14 +77,17 @@ impl Phase for PlayerSelectedState {
                     });
                 }
             }
-        }
+        };
+
+        Transition::None
     }
 
-    fn on_resume(&mut self, world: &mut World) {
-        let Some(to) = world.get(self.selected).map(|p| p.prev_pos) else {
-            return;
+    fn on_resume(&mut self, world: &mut World) -> Transition {
+        let Some(to) = world.get(self.cat_id).map(|p| p.prev_pos) else {
+            return Transition::None;
         };
-        world.move_to(self.selected, to);
+        world.move_to(self.cat_id, to);
+        Transition::None
     }
 
     fn handle_input(&mut self, key: KeyEvent, world: &mut World) -> Transition {

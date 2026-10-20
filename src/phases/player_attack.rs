@@ -1,11 +1,8 @@
-use crossterm::{
-    cursor,
-    event::{KeyCode, KeyEvent},
-};
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::style::Color::Red;
 
 use crate::{
-    phases::{Phase, Transition, player_turn::PlayerTurnState},
+    phases::{Phase, Transition, deal_damage::DealDamageState},
     types::{Coordinate, EntityId, EntityKind, Layer::ForegroundUi, Renderable},
     world::World,
 };
@@ -47,16 +44,19 @@ impl Phase for PlayerAttackState {
     fn handle_input(&mut self, key: KeyEvent, world: &mut World) -> Transition {
         match key.code {
             KeyCode::Char('a') => {
-                if world
+                let target_id = world
                     .at(self.cursor.pos)
-                    .any(|id| matches!(id.kind, EntityKind::Enemy(_)))
-                {
-                    let Some(_cat) = world.players.get(&self.cat_id) else {
-                        return Transition::Reset(Box::new(PlayerTurnState::new(
-                            Coordinate::center(),
-                        )));
+                    .find(|id| matches!(id.kind, EntityKind::Enemy(_)))
+                    .map(|e| e.id);
+
+                if let Some(target_id) = target_id {
+                    if let Some(cat) = world.players.get_mut(&self.cat_id) {
+                        cat.acted = true;
                     };
-                    return Transition::Reset(Box::new(PlayerTurnState::new(self.cursor.pos)));
+                    return Transition::Push(Box::new(DealDamageState::new(
+                        self.cat_id,
+                        target_id,
+                    )));
                 }
                 Transition::None
             }
@@ -67,6 +67,10 @@ impl Phase for PlayerAttackState {
             KeyCode::Down => self.select_target(0, 1, world),
             _ => Transition::None,
         }
+    }
+
+    fn on_resume(&mut self, _world: &mut World) -> Transition {
+        Transition::Pop
     }
 
     fn renderables(&self, _world: &World) -> Vec<Renderable> {

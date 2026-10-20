@@ -1,22 +1,28 @@
 use crossterm::event::KeyEvent;
 use ratatui::{Frame, layout::Rect, style::Color};
 
-use crate::{log, types::Renderable, world::World};
+use crate::{log, types::Renderable, ui::Panels, world::World};
 
 pub mod action_menu;
+pub mod deal_damage;
+pub mod end_turn;
 pub mod enemy_turn;
 pub mod init_game;
+pub mod player_attack;
 pub mod player_selected;
 pub mod player_turn;
-pub mod player_attack;
 
 pub trait Phase {
     fn name(&self) -> &str {
         let full = std::any::type_name::<Self>();
         full.rsplit("::").next().unwrap_or(full)
     }
-    fn on_enter(&mut self, _world: &mut World) {}
-    fn on_resume(&mut self, _world: &mut World) {}
+    fn on_enter(&mut self, _world: &mut World) -> Transition {
+        Transition::None
+    }
+    fn on_resume(&mut self, _world: &mut World) -> Transition {
+        Transition::None
+    }
     fn on_tick(&mut self, _world: &mut World) -> Transition {
         Transition::None
     }
@@ -25,7 +31,7 @@ pub trait Phase {
     fn renderables(&self, _world: &World) -> Vec<Renderable> {
         vec![]
     }
-    fn render_menu(&self, _frame: &mut Frame, _area: Rect) {}
+    fn render(&self, _world: &World, _frame: &mut Frame, _panels: &Panels) {}
     fn theme(&self) -> UiTheme {
         UiTheme::default()
     }
@@ -90,35 +96,37 @@ impl PhaseStack {
         self.apply(transition, world);
     }
 
-    pub fn render(&self, frame: &mut Frame, area: Rect) {
-        // for phase in &self.stack {
-        //     phase.render_menu(frame, area);
-        // }
-        if let Some(top) = self.stack.last() {
-            top.render_menu(frame, area);
-        };
-    }
+    // pub fn render(&self, frame: &mut Frame, field_area: Rect, menu_area: Rect, hud_area: Rect) {
+    //     // for phase in &self.stack {
+    //     //     phase.render_menu(frame, area);
+    //     // }
+    //     if let Some(top) = self.stack.last() {
+    //         top.render(frame, field_area, menu_area, hud_area);
+    //     };
+    // }
 
-    pub fn renderables(&self, world: &World) -> Vec<Renderable> {
-        // self.stack
-        //     .iter()
-        //     .flat_map(|phase| phase.renderables(world))
-        //     .collect()
-        let Some(top) = self.stack.last() else {
-            return Vec::new();
-        };
-        top.renderables(world)
-    }
+    // pub fn renderables(&self, world: &World) -> Vec<Renderable> {
+    //     // self.stack
+    //     //     .iter()
+    //     //     .flat_map(|phase| phase.renderables(world))
+    //     //     .collect()
+    //     let Some(top) = self.stack.last() else {
+    //         return Vec::new();
+    //     };
+    //     top.renderables(world)
+    // }
 
     fn apply(&mut self, t: Transition, world: &mut World) {
         match t {
             Transition::None => {}
             Transition::Push(mut next) => {
-                next.on_enter(world);
+                let t = next.on_enter(world);
                 log!("Push Transition {}", next.name());
                 self.stack.push(next);
+                self.apply(t, world);
             }
             Transition::Pop => {
+                let mut t = Transition::None;
                 if self.stack.len() > 1 {
                     if let Some(mut old) = self.stack.pop() {
                         log!("Pop Transition {}", old.name());
@@ -126,11 +134,13 @@ impl PhaseStack {
                     }
                     if let Some(next) = self.stack.last_mut() {
                         log!("Resuming {}", next.name());
-                        next.on_resume(world);
+                        t = next.on_resume(world);
                     }
                 }
+                self.apply(t, world);
             }
             Transition::PopN(mut n) => {
+                let mut t = Transition::None;
                 while self.stack.len() > 1 && n > 0 {
                     if let Some(mut old) = self.stack.pop() {
                         log!("Pop Transition {}", old.name());
@@ -138,28 +148,31 @@ impl PhaseStack {
                     }
                     if let Some(next) = self.stack.last_mut() {
                         log!("Resuming {}", next.name());
-                        next.on_resume(world);
+                        t = next.on_resume(world);
                     }
                     n -= 1;
                 }
+                self.apply(t, world);
             }
             Transition::Replace(mut next) => {
                 if let Some(mut old) = self.stack.pop() {
                     log!("Replacing Transition {}", old.name());
                     old.on_exit(world);
                 }
-                next.on_enter(world);
+                let t = next.on_enter(world);
                 log!("Replacing with Transition {}", next.name());
                 self.stack.push(next);
+                self.apply(t, world);
             }
             Transition::Reset(mut next) => {
                 while let Some(mut old) = self.stack.pop() {
                     log!("Resetting Transition {}", old.name());
                     old.on_exit(world);
                 }
-                next.on_enter(world);
+                let t = next.on_enter(world);
                 log!("Resetting with Transition {}", next.name());
                 self.stack.push(next);
+                self.apply(t, world);
             }
         }
     }

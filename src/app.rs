@@ -1,4 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use ratatui::Frame;
 
 use crate::{app::AppState::MainMenu, game::Game};
 
@@ -31,9 +32,17 @@ impl App {
     }
 
     pub fn tick(&mut self) {
+        
         match &mut self.state {
             AppState::InGame(game) => game.tick(),
             _ => (),
+        }
+    }
+
+    pub fn render(&mut self, frame: &mut Frame) {
+        match &mut self.state {
+            AppState::InGame(game) => { game.render(frame) }
+            _ => {}
         }
     }
 
