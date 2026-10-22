@@ -1,36 +1,41 @@
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
-    Frame, buffer::Buffer, layout::{Constraint, Layout, Rect}, style::{Color, Style}, widgets::{List, ListState, Paragraph, StatefulWidget, Widget},
+    Frame,
+    buffer::Buffer,
+    layout::{Constraint, Layout, Rect},
+    style::{Color, Style},
+    widgets::{List, ListState, Paragraph, StatefulWidget, Widget},
 };
 
 use crate::{
     phases::{
         Phase, Transition, UiTheme, enemy_turn::EnemyTurnState, player_attack::PlayerAttackState,
         player_turn::PlayerTurnState,
-    }, types::{Coordinate, EntityId, EntityKind, Layer::BackgroundUi, Renderable}, ui::Panels, util::helpers::ToVecString, world::World,
+    },
+    types::{Coordinate, EntityId, EntityKind, Layer::BackgroundUi, Renderable},
+    ui::Panels,
+    world::World,
 };
 
 pub const ACTION_MENU_ITEMS: [&str; 3] = ["Attack", "Skill", "End"];
 
 pub struct ActionMenuState {
     cat_id: EntityId, // EntityId of the cat performing the action
-    selected_item: usize,
-    actions: Vec<String>,
+    menu: SelectList,
 }
 
 impl ActionMenuState {
     pub fn new(cat_id: EntityId, actions: &[&str]) -> Self {
         Self {
             cat_id,
-            selected_item: 0,
-            actions: actions.to_strings(),
+            menu: SelectList::new(actions.iter().map(|s| s.to_string()).collect()),
         }
     }
 }
 
 impl Phase for ActionMenuState {
     fn handle_input(&mut self, key: crossterm::event::KeyEvent, world: &mut World) -> Transition {
-        let n = self.actions.len();
+        self.menu.handle_input(key);
         let Some(pos) = world.get(self.cat_id).map(|e| e.pos) else {
             return Transition::Reset(Box::new(PlayerTurnState::new(Coordinate::center())));
         };
@@ -39,10 +44,8 @@ impl Phase for ActionMenuState {
         };
 
         match key.code {
-            KeyCode::Up => self.selected_item = (self.selected_item + n - 1) % n,
-            KeyCode::Down => self.selected_item = (self.selected_item + 1) % n,
             KeyCode::Char('s') => return Transition::Pop,
-            KeyCode::Char('a') => match self.actions[self.selected_item].as_str() {
+            KeyCode::Char('a') => match self.menu.selected().as_str() {
                 "Attack" => {
                     let Some(first_target_pos) = [
                         Coordinate(1, 0),
@@ -93,27 +96,20 @@ impl Phase for ActionMenuState {
         }]
     }
 
-    fn render(&self, world: &World, frame: &mut Frame, panels: &Panels) {
-        let Some(cat) = world.players.get(&self.cat_id) else { return };
+    fn render(&mut self, world: &World, frame: &mut Frame, panels: &Panels) {
+        let Some(cat) = world.players.get(&self.cat_id) else {
+            return;
+        };
         panels.menu(|area| {
-            let [name_area, list_area] = Layout::vertical([
-                Constraint::Length(3),
-                Constraint::Min(1),
-            ])
-            .areas(area);
-    
+            let [name_area, list_area] =
+                Layout::vertical([Constraint::Length(3), Constraint::Min(1)]).areas(area);
+
             frame.render_widget(
                 Paragraph::new(cat.data.name.clone()).style(Style::default().fg(Color::White)),
                 name_area,
             );
-    
-            frame.render_widget(
-                ActionMenu {
-                    items: &self.actions,
-                    selected: self.selected_item,
-                }, 
-                list_area
-            );
+
+            frame.render_widget(&mut self.menu, list_area);
         });
     }
 
@@ -126,14 +122,51 @@ impl Phase for ActionMenuState {
     }
 }
 
-pub struct ActionMenu<'a> {
-    pub items: &'a[String],
-    pub selected: usize,
+pub struct SelectList {
+    pub items: Vec<String>,
+    state: ListState,
 }
 
-impl Widget for ActionMenu<'_> {
+impl SelectList {
+    pub fn new(items: Vec<String>) -> Self {
+        Self {
+            items,
+            state: ListState::default().with_selected(Some(0)),
+        }
+    }
+    pub fn handle_input(&mut self, key: KeyEvent) {
+        match key.code {
+            KeyCode::Up => self.prev(),
+            KeyCode::Down => self.next(),
+            _ => (),
+        }
+    }
+
+    fn next(&mut self) {
+        let n = self.items.len();
+        if n == 0 {
+            return;
+        };
+        let i = self.state.selected().unwrap_or(0);
+        self.state.select(Some((i + 1) % n));
+    }
+
+    fn prev(&mut self) {
+        let n = self.items.len();
+        if n == 0 {
+            return;
+        };
+        let i = self.state.selected().unwrap_or(0);
+        self.state.select(Some((i + n - 1) % n));
+    }
+
+    pub fn selected(&self) -> String {
+        self.items[self.state.selected().unwrap_or_default()].clone()
+    }
+}
+
+impl Widget for &mut SelectList {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let mut state = ListState::default().with_selected(Some(self.selected));
         StatefulWidget::render(
             List::new(self.items.iter().cloned())
                 .style(Style::default().fg(Color::White))
@@ -141,7 +174,7 @@ impl Widget for ActionMenu<'_> {
                 .highlight_style(Style::default().fg(Color::Yellow)),
             area,
             buf,
-            &mut state,
+            &mut self.state,
         );
     }
 }

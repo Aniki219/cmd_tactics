@@ -4,7 +4,7 @@ use ratatui::Frame;
 use crate::{
     log,
     phases::{
-        Phase, PhaseStack,
+        PhaseStack,
         action_menu::{ACTION_MENU_ITEMS, ActionMenuState},
         enemy_turn::EnemyTurnState,
         init_game::InitGame,
@@ -96,10 +96,10 @@ impl Game {
 
     pub fn render(&mut self, frame: &mut Frame) {
         // phase is &Box<dyn Phase>
-        let Some(phase) = self.phases.stack.last() else {
+        let Some(phase) = self.phases.stack.last_mut() else {
             return;
         };
         // as_ref pulls it out of the Box
-        self.ui.render(phase.as_ref(), &self.world, frame);
+        self.ui.render(phase.as_mut(), &self.world, frame);
     }
 }

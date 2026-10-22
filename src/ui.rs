@@ -5,7 +5,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Flex, Layout, Margin, Rect},
     style::{Color, Style},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget, Wrap},
+    widgets::{Block, BorderType, Borders, Clear, Paragraph, Wrap},
 };
 
 use crate::{
@@ -66,7 +66,7 @@ impl Panels {
 }
 
 impl GameUi {
-    fn panel(title: &'static str, color: Color) -> Block {
+    fn panel(title: &'static str, color: Color) -> Block<'static> {
         Block::default()
             .title(title)
             .title_alignment(Alignment::Center)
@@ -102,7 +102,7 @@ impl GameUi {
 
         Panels { field, menu, hud }
     }
-    pub fn render(&mut self, phase: &dyn Phase, world: &World, frame: &mut Frame) {
+    pub fn render(&mut self, phase: &mut dyn Phase, world: &World, frame: &mut Frame) {
         let panels = Self::layout(frame);
         let theme = phase.theme();
 

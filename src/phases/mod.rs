@@ -1,5 +1,5 @@
 use crossterm::event::KeyEvent;
-use ratatui::{Frame, layout::Rect, style::Color};
+use ratatui::{Frame, style::Color};
 
 use crate::{log, types::Renderable, ui::Panels, world::World};
 
@@ -31,7 +31,7 @@ pub trait Phase {
     fn renderables(&self, _world: &World) -> Vec<Renderable> {
         vec![]
     }
-    fn render(&self, _world: &World, _frame: &mut Frame, _panels: &Panels) {}
+    fn render(&mut self, _world: &World, _frame: &mut Frame, _panels: &Panels) {}
     fn theme(&self) -> UiTheme {
         UiTheme::default()
     }
