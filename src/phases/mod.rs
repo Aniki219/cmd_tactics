@@ -1,7 +1,12 @@
 use crossterm::event::KeyEvent;
-use ratatui::{Frame, style::Color};
+use ratatui::{
+    Frame,
+    layout::{Constraint, Direction::Horizontal, HorizontalAlignment::Center, Layout},
+    style::{Color, Stylize},
+    widgets::{Block, Padding, Paragraph},
+};
 
-use crate::{log, types::Renderable, ui::Panels, world::World};
+use crate::{log, setup::CatState, types::Renderable, ui::Panels, world::World};
 
 pub mod action_menu;
 pub mod deal_damage;
@@ -31,7 +36,35 @@ pub trait Phase {
     fn renderables(&self, _world: &World) -> Vec<Renderable> {
         vec![]
     }
-    fn render(&mut self, _world: &World, _frame: &mut Frame, _panels: &Panels) {}
+    fn render(&mut self, world: &World, frame: &mut Frame, panels: &Panels) {
+        panels.hud(|area| {
+            let cat_data = world
+                .players
+                .iter()
+                .filter_map(|(_id, cat)| Some(cat.data.clone()))
+                .collect::<Vec<CatState>>();
+            let slots = Layout::default()
+                .direction(Horizontal)
+                .constraints(cat_data.iter().map(|_| Constraint::Min(15)))
+                .split(area);
+
+            for i in 0..slots.len() {
+                let cat = cat_data[i].clone();
+                frame.render_widget(
+                    Paragraph::new(
+                        cat.name.clone()
+                            + "\nHP: "
+                            + cat.health.to_string().as_str()
+                            + "/"
+                            + cat.max_health.to_string().as_str(),
+                    )
+                    .alignment(Center)
+                    .block(Block::new().padding(Padding::new(1, 1, 0, 0))),
+                    slots[i],
+                );
+            }
+        });
+    }
     fn theme(&self) -> UiTheme {
         UiTheme::default()
     }
@@ -95,26 +128,6 @@ impl PhaseStack {
         let transition = top.on_tick(world);
         self.apply(transition, world);
     }
-
-    // pub fn render(&self, frame: &mut Frame, field_area: Rect, menu_area: Rect, hud_area: Rect) {
-    //     // for phase in &self.stack {
-    //     //     phase.render_menu(frame, area);
-    //     // }
-    //     if let Some(top) = self.stack.last() {
-    //         top.render(frame, field_area, menu_area, hud_area);
-    //     };
-    // }
-
-    // pub fn renderables(&self, world: &World) -> Vec<Renderable> {
-    //     // self.stack
-    //     //     .iter()
-    //     //     .flat_map(|phase| phase.renderables(world))
-    //     //     .collect()
-    //     let Some(top) = self.stack.last() else {
-    //         return Vec::new();
-    //     };
-    //     top.renderables(world)
-    // }
 
     fn apply(&mut self, t: Transition, world: &mut World) {
         match t {

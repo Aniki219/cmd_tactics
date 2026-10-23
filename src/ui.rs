@@ -163,7 +163,6 @@ impl GameUi {
             }
 
             lines.push(Line::from(row_spans));
-
         }
         lines
     }

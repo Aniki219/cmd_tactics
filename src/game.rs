@@ -47,7 +47,7 @@ impl Game {
             Err(e) => log!("Failed to load cats.toml: {}", e),
         }
 
-        let test_string = "enemy";
+        let test_string = "start";
 
         match test_string {
             "start" => {
