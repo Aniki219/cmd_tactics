@@ -118,4 +118,14 @@ impl World {
             .min_by_key(|(_, p)| p.id)
             .and_then(|(_, p)| self.entities.get(&p.id))
     }
+
+    pub fn cat_mut(&mut self, id: &EntityId) -> Option<&mut Cat> {
+        self.players
+            .get_mut(id)
+            .or_else(|| self.enemies.get_mut(id))
+    }
+
+    pub fn get_cat(&self, id: &EntityId) -> Option<&Cat> {
+        self.players.get(id).or_else(|| self.enemies.get(id))
+    }
 }

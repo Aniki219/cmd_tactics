@@ -1,14 +1,18 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use ratatui::style::Color::White;
+use ratatui::{Frame, style::Color::White};
 
 use crate::{
     phases::{
         Phase, Transition,
         action_menu::{ACTION_MENU_ITEMS, ActionMenuState},
-    }, types::{
+    },
+    types::{
         Layer::{BackgroundUi, ForegroundUi},
         *,
-    }, ui::hud::Hud, world::World,
+    },
+    ui::game_ui::Panels,
+    ui::{cat_details::CatDetails, hud::Hud},
+    world::World,
 };
 
 pub struct PlayerSelectedState {
@@ -54,14 +58,14 @@ impl PlayerSelectedState {
 }
 
 impl Phase for PlayerSelectedState {
-    fn on_enter(&mut self, world: &mut World) -> Transition{
+    fn on_enter(&mut self, world: &mut World) -> Transition {
         let Some(origin) = world.get(self.cat_id).map(|e| e.pos) else {
             return Transition::None;
         };
         let Some(cat) = world.players.get(&self.cat_id) else {
             return Transition::None;
         };
-        let step = cat.data.speed;
+        let step = cat.speed;
 
         for i in -step..=step {
             for j in -step..=step {
@@ -75,7 +79,7 @@ impl Phase for PlayerSelectedState {
                     });
                 }
             }
-        };
+        }
 
         Transition::None
     }
@@ -112,8 +116,12 @@ impl Phase for PlayerSelectedState {
         }
     }
 
-    fn render(&mut self, world: &World, frame: &mut ratatui::prelude::Frame, panels: &crate::game_ui::Panels) {
+    fn render(&mut self, world: &World, frame: &mut Frame, panels: &mut Panels) {
         frame.render_widget(Hud::new(world), panels.hud_area());
+
+        if let Some(cat) = world.get_cat(&self.cat_id) {
+            frame.render_widget(CatDetails::new(&cat), panels.menu_area());
+        }
     }
 
     fn renderables(&self, _world: &World) -> Vec<Renderable> {

@@ -33,15 +33,6 @@ pub struct CatData {
     pub speed: i32,
 }
 
-#[derive(Clone)]
-pub struct CatState {
-    pub name: String,
-    pub health: i32,
-    pub max_health: i32,
-    pub pos: Coordinate,
-    pub speed: i32,
-}
-
 pub fn add_player_cat(world: &mut World, data: CatData) {
     let id = world.spawn(
         EntityKind::Cat(world.players.len() as i32 + 1),
@@ -50,16 +41,7 @@ pub fn add_player_cat(world: &mut World, data: CatData) {
         CAT_COLORS[world.players.len() % CAT_COLORS.len()],
     );
 
-    let mut cat_state = CatState {
-        max_health: data.health,
-        name: data.name,
-        health: data.health,
-        pos: data.pos,
-        speed: data.speed,
-    };
-
-    cat_state.max_health = cat_state.health;
-    world.players.insert(id, Cat::new(id, cat_state));
+    world.players.insert(id, Cat::new(id, data));
 }
 
 pub fn add_enemy_cat(world: &mut World, data: CatData) {
@@ -70,14 +52,5 @@ pub fn add_enemy_cat(world: &mut World, data: CatData) {
         Color::Red,
     );
 
-    let mut cat_state = CatState {
-        max_health: data.health,
-        name: data.name,
-        health: data.health,
-        pos: data.pos,
-        speed: data.speed,
-    };
-
-    cat_state.max_health = cat_state.health;
-    world.enemies.insert(id, Cat::new(id, cat_state));
+    world.enemies.insert(id, Cat::new(id, data));
 }

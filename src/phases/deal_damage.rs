@@ -34,7 +34,7 @@ impl Phase for DealDamageState {
     }
 
     fn on_tick(&mut self, world: &mut World) -> Transition {
-        if self.timer.tick() {
+        if self.timer.is_done() {
             let Some(source_kind) = world.get(self.source_id).map(|e| e.kind) else {
                 return Transition::None;
             };
@@ -53,20 +53,22 @@ impl Phase for DealDamageState {
                 }
             }
         }
+        self.timer.tick();
         Transition::None
     }
 
     fn on_enter(&mut self, world: &mut World) -> Transition {
-        let [Some(source_cat), Some(target_cat)] = [self.source_id, self.target_id]
-            .map(|id| world.players.get(&id).or_else(|| world.enemies.get(&id)))
-        else {
+        // Read phase: shared borrows only, ending once we've computed values
+        let (Some(source), Some(target), Some(target_entity)) = (
+            world.get_cat(&self.source_id),
+            world.get_cat(&self.target_id),
+            world.entities.get(&self.target_id),
+        ) else {
             return Transition::None;
         };
-        self.damage = (source_cat.data.health - target_cat.data.health / 2).min(99);
+        
+        self.damage = (source.health - target.health / 2).clamp(0, 99);
 
-        let Some(target_entity) = world.entities.get(&self.target_id) else {
-            return Transition::None;
-        };
         self.damage_number = Some(Renderable {
             pos: target_entity.pos,
             glyph: format!("{:02}", self.damage),
@@ -74,6 +76,12 @@ impl Phase for DealDamageState {
             layer: ForegroundUi,
             blink: false,
         });
+
+        // Write phase: the shared borrows above are no longer used, so they end here
+        if let Some(target) = world.cat_mut(&self.target_id) {
+            target.health -= self.damage;
+        }
+    
         Transition::None
     }
 

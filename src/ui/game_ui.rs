@@ -22,10 +22,26 @@ const HUD_HEIGHT: u16 = 4;
 
 pub struct GameUi {}
 
-pub struct Popup {
+pub struct PopupState {
     pub title: String,
     pub body: String,
     pub color: Color,
+}
+
+pub struct UiTheme {
+    pub field_color: Color,
+    pub menu_color: Color,
+    pub hud_color: Color,
+}
+
+impl Default for UiTheme {
+    fn default() -> Self {
+        Self {
+            field_color: Color::Yellow,
+            menu_color: Color::White,
+            hud_color: Color::White,
+        }
+    }
 }
 
 pub struct Panels {
@@ -43,6 +59,10 @@ impl Panels {
         draw(self.menu.inner(Margin::new(2, 1)));
     }
 
+    pub fn menu_area(&self) -> Rect {
+        self.menu.inner(Margin::new(1, 1))
+    }
+
     pub fn hud(&self, draw: impl FnOnce(Rect)) {
         draw(self.hud.inner(Margin::new(2, 1)));
     }
@@ -51,7 +71,7 @@ impl Panels {
         self.hud.inner(Margin::new(1, 1))
     }
 
-    pub fn popup(&mut self, frame: &mut Frame, popup: Popup) {
+    pub fn popup(&mut self, frame: &mut Frame, popup: PopupState) {
         let area = centered_rect(self.field.width / 2, 3, self.field);
         let popup = Paragraph::new(popup.body)
             .wrap(Wrap { trim: true })
@@ -107,7 +127,7 @@ impl GameUi {
         Panels { field, menu, hud }
     }
     pub fn render(&mut self, phase: &mut dyn Phase, world: &World, frame: &mut Frame) {
-        let panels = Self::layout(frame);
+        let mut panels = Self::layout(frame);
         let theme = phase.theme();
 
         let lines = Self::field_lines(phase, world, frame.count() % 4 > 1);
@@ -128,7 +148,7 @@ impl GameUi {
             panels.hud,
         );
 
-        phase.render(&world, frame, &panels);
+        phase.render(&world, frame, &mut panels);
     }
     fn field_lines(phase: &dyn Phase, world: &World, blink: bool) -> Vec<Line<'static>> {
         let mut renderables: HashMap<Coordinate, Vec<Renderable>> = HashMap::new();

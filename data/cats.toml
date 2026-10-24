@@ -19,13 +19,13 @@ speed = 3
 [[enemy]]
 name = "bulbasaur"
 health = 20
-pos = [15, 4]
+pos = [7, 4]
 speed = 4
 
 [[enemy]]
 name = "bulbasaur"
 health = 20
-pos = [16, 14]
+pos = [10, 10]
 speed = 4
 
 [[enemy]]

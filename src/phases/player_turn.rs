@@ -2,7 +2,16 @@ use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{Frame, style::Color::White};
 
 use crate::{
-    game_ui::Panels, phases::{Phase, Transition, end_turn::{EndTurnState, Turn}, enemy_turn::EnemyTurnState, player_selected::PlayerSelectedState}, types::{Layer::ForegroundUi, *}, ui::hud::Hud, world::World,
+    phases::{
+        Phase, Transition,
+        end_turn::{EndTurnState, Turn},
+        enemy_turn::EnemyTurnState,
+        field_menu::FieldMenuState,
+        player_selected::PlayerSelectedState,
+    },
+    types::{Layer::ForegroundUi, *},
+    ui::{cat_details::CatDetails, game_ui::Panels, hud::Hud},
+    world::World,
 };
 
 pub struct PlayerTurnState {
@@ -28,7 +37,7 @@ impl PlayerTurnState {
             .at(pos)
             .map(|e| e.id)
             .find(|id| world.players.get(id).is_some_and(|p| !p.acted))
-            .map_or(Transition::None, |id| {
+            .map_or(Transition::Push(Box::new(FieldMenuState::new())), |id| {
                 Transition::Push(Box::new(PlayerSelectedState::new(pos, id)))
             })
     }
@@ -77,8 +86,16 @@ impl Phase for PlayerTurnState {
         Transition::None
     }
 
-    fn render(&mut self, world: &World, frame: &mut Frame, panels: &Panels) {
+    fn render(&mut self, world: &World, frame: &mut Frame, panels: &mut Panels) {
         frame.render_widget(Hud::new(world), panels.hud_area());
+
+        if let Some(hover) = world.at(self.cursor.pos).find(|e| {
+            matches!(e.kind, EntityKind::Cat(_)) || matches!(e.kind, EntityKind::Enemy(_))
+        }) {
+            if let Some(cat) = world.get_cat(&hover.id) {
+                frame.render_widget(CatDetails::new(cat), panels.menu_area());
+            }
+        }
     }
 
     fn renderables(&self, _world: &World) -> Vec<Renderable> {

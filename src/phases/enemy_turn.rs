@@ -10,7 +10,7 @@ use crate::{
         player_turn::PlayerTurnState,
     },
     types::{Cat, Coordinate, Entity, EntityId},
-    game_ui::{GRID_HEIGHT, GRID_WIDTH},
+    ui::game_ui::{GRID_HEIGHT, GRID_WIDTH},
     world::World,
 };
 
@@ -84,7 +84,7 @@ impl EnemyTurnState {
                     continue;
                 }
                 let steps = coord.dist(entity.pos);
-                if steps > cat.data.speed {
+                if steps > cat.speed {
                     continue;
                 }
 

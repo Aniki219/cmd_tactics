@@ -4,32 +4,28 @@ use ratatui::{
     widgets::{Block, Padding, Paragraph, Widget},
 };
 
-use crate::{setup::CatState, world::World};
+use crate::{types::Cat, world::World};
 
-pub struct Hud {
-    cat_states: Vec<CatState>,
+pub struct Hud<'a> {
+    cats: Vec<&'a Cat>,
 }
 
-impl Hud {
-    pub fn new(world: &World) -> Self {
-        let cat_states = world
-            .players
-            .iter()
-            .filter_map(|(_id, cat)| Some(cat.data.clone()))
-            .collect::<Vec<CatState>>();
-
-        Self { cat_states }
+impl<'a> Hud<'a> {
+    pub fn new(world: &'a World) -> Self {
+        Self {
+            cats: world.players.values().collect(),
+        }
     }
 }
 
-impl Widget for Hud {
+impl Widget for Hud<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let slots = Layout::default()
             .direction(Horizontal)
-            .constraints(self.cat_states.iter().map(|_| Constraint::Min(15)))
+            .constraints(self.cats.iter().map(|_| Constraint::Min(15)))
             .split(area);
 
-        for (cat, slot) in self.cat_states.iter().zip(slots.iter()) {
+        for (cat, slot) in self.cats.iter().zip(slots.iter()) {
             Paragraph::new(
                 cat.name.clone()
                     + "\nHP: "

@@ -13,4 +13,8 @@ impl Timer {
         }
         self.duration <= 0
     }
+
+    pub fn is_done(&self) -> bool {
+        self.duration <= 0
+    }
 }

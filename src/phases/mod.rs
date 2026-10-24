@@ -1,12 +1,19 @@
 use crossterm::event::KeyEvent;
-use ratatui::{Frame, style::Color};
+use ratatui::Frame;
 
-use crate::{game_ui::Panels, log, types::Renderable, ui::hud::Hud, world::World};
+use crate::{
+    ui::game_ui::Panels,
+    log,
+    types::Renderable,
+    ui::{game_ui::UiTheme, hud::Hud},
+    world::World,
+};
 
 pub mod action_menu;
 pub mod deal_damage;
 pub mod end_turn;
 pub mod enemy_turn;
+pub mod field_menu;
 pub mod init_game;
 pub mod player_attack;
 pub mod player_selected;
@@ -32,7 +39,7 @@ pub trait Phase {
         vec![]
     }
 
-    fn render(&mut self, world: &World, frame: &mut Frame, panels: &Panels) {
+    fn render(&mut self, world: &World, frame: &mut Frame, panels: &mut Panels) {
         frame.render_widget(Hud::new(world), panels.hud_area());
     }
 
@@ -52,22 +59,6 @@ pub enum Transition {
 
 pub struct PhaseStack {
     pub stack: Vec<Box<dyn Phase>>,
-}
-
-pub struct UiTheme {
-    pub field_color: Color,
-    pub menu_color: Color,
-    pub hud_color: Color,
-}
-
-impl Default for UiTheme {
-    fn default() -> Self {
-        Self {
-            field_color: Color::Yellow,
-            menu_color: Color::White,
-            hud_color: Color::White,
-        }
-    }
 }
 
 impl PhaseStack {

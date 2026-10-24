@@ -12,7 +12,7 @@ use crate::{
     },
     setup::{CatToml, add_enemy_cat, add_player_cat},
     types::{Coordinate, EntityId},
-    game_ui::GameUi,
+    ui::game_ui::GameUi,
     util::load::load_toml,
     world::World,
 };

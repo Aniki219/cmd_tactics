@@ -2,7 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::style::Color::Red;
 
 use crate::{
-    phases::{Phase, Transition, deal_damage::DealDamageState}, types::{Coordinate, EntityId, EntityKind, Layer::ForegroundUi, Renderable}, world::World,
+    phases::{Phase, Transition, deal_damage::DealDamageState}, types::{Coordinate, EntityId, EntityKind, Layer::ForegroundUi, Renderable}, ui::{cat_details::CatDetails, hud::Hud}, world::World,
 };
 
 pub struct PlayerAttackState {
@@ -73,5 +73,18 @@ impl Phase for PlayerAttackState {
 
     fn renderables(&self, _world: &World) -> Vec<Renderable> {
         vec![self.cursor.clone()]
+    }
+
+    fn render(
+        &mut self,
+        world: &World,
+        frame: &mut ratatui::prelude::Frame,
+        panels: &mut crate::ui::game_ui::Panels,
+    ) {
+        frame.render_widget(Hud::new(world), panels.hud_area());
+
+        if let Some(target_cat) = world.at(self.cursor.pos).find_map(|e| world.get_cat(&e.id)) {
+            frame.render_widget(CatDetails::new(target_cat), panels.menu_area());
+        }
     }
 }

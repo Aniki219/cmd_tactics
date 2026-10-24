@@ -1,16 +1,22 @@
-use crossterm::event::{KeyCode};
+use crossterm::event::KeyCode;
 use ratatui::{
     Frame,
     layout::{Constraint, Layout},
     style::{Color, Style},
-    widgets::{Paragraph},
+    widgets::Paragraph,
 };
 
 use crate::{
-    game_ui::Panels, phases::{
-        Phase, Transition, UiTheme, enemy_turn::EnemyTurnState, player_attack::PlayerAttackState,
+    ui::game_ui::Panels,
+    phases::{
+        Phase, Transition, UiTheme,
+        end_turn::{EndTurnState, Turn},
+        player_attack::PlayerAttackState,
         player_turn::PlayerTurnState,
-    }, types::{Coordinate, EntityId, EntityKind, Layer::BackgroundUi, Renderable}, ui::select_list::SelectList, world::World,
+    },
+    types::{Coordinate, EntityId, EntityKind, Layer::BackgroundUi, Renderable},
+    ui::select_list::SelectList,
+    world::World,
 };
 
 pub const ACTION_MENU_ITEMS: [&str; 3] = ["Attack", "Skill", "End"];
@@ -68,7 +74,7 @@ impl Phase for ActionMenuState {
                     cat.acted = true;
 
                     if world.players.iter().all(|(_, cat)| cat.acted) {
-                        return Transition::Reset(Box::new(EnemyTurnState::new(world)));
+                        return Transition::Reset(Box::new(EndTurnState::new(Turn::Player)));
                     }
                     return Transition::Reset(Box::new(PlayerTurnState::new(pos)));
                 }
@@ -92,7 +98,7 @@ impl Phase for ActionMenuState {
         }]
     }
 
-    fn render(&mut self, world: &World, frame: &mut Frame, panels: &Panels) {
+    fn render(&mut self, world: &World, frame: &mut Frame, panels: &mut Panels) {
         let Some(cat) = world.players.get(&self.cat_id) else {
             return;
         };
@@ -101,7 +107,7 @@ impl Phase for ActionMenuState {
                 Layout::vertical([Constraint::Length(3), Constraint::Min(1)]).areas(area);
 
             frame.render_widget(
-                Paragraph::new(cat.data.name.clone()).style(Style::default().fg(Color::White)),
+                Paragraph::new(cat.name.clone()).style(Style::default().fg(Color::White)),
                 name_area,
             );
 
