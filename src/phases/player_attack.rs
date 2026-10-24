@@ -2,9 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::style::Color::Red;
 
 use crate::{
-    phases::{Phase, Transition, deal_damage::DealDamageState},
-    types::{Coordinate, EntityId, EntityKind, Layer::ForegroundUi, Renderable},
-    world::World,
+    phases::{Phase, Transition, deal_damage::DealDamageState}, types::{Coordinate, EntityId, EntityKind, Layer::ForegroundUi, Renderable}, world::World,
 };
 
 pub struct PlayerAttackState {

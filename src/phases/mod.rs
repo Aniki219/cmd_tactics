@@ -1,12 +1,7 @@
 use crossterm::event::KeyEvent;
-use ratatui::{
-    Frame,
-    layout::{Constraint, Direction::Horizontal, HorizontalAlignment::Center, Layout},
-    style::{Color, Stylize},
-    widgets::{Block, Padding, Paragraph},
-};
+use ratatui::{Frame, style::Color};
 
-use crate::{log, setup::CatState, types::Renderable, ui::Panels, world::World};
+use crate::{game_ui::Panels, log, types::Renderable, ui::hud::Hud, world::World};
 
 pub mod action_menu;
 pub mod deal_damage;
@@ -36,35 +31,11 @@ pub trait Phase {
     fn renderables(&self, _world: &World) -> Vec<Renderable> {
         vec![]
     }
-    fn render(&mut self, world: &World, frame: &mut Frame, panels: &Panels) {
-        panels.hud(|area| {
-            let cat_data = world
-                .players
-                .iter()
-                .filter_map(|(_id, cat)| Some(cat.data.clone()))
-                .collect::<Vec<CatState>>();
-            let slots = Layout::default()
-                .direction(Horizontal)
-                .constraints(cat_data.iter().map(|_| Constraint::Min(15)))
-                .split(area);
 
-            for i in 0..slots.len() {
-                let cat = cat_data[i].clone();
-                frame.render_widget(
-                    Paragraph::new(
-                        cat.name.clone()
-                            + "\nHP: "
-                            + cat.health.to_string().as_str()
-                            + "/"
-                            + cat.max_health.to_string().as_str(),
-                    )
-                    .alignment(Center)
-                    .block(Block::new().padding(Padding::new(1, 1, 0, 0))),
-                    slots[i],
-                );
-            }
-        });
+    fn render(&mut self, world: &World, frame: &mut Frame, panels: &Panels) {
+        frame.render_widget(Hud::new(world), panels.hud_area());
     }
+
     fn theme(&self) -> UiTheme {
         UiTheme::default()
     }

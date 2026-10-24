@@ -1,20 +1,16 @@
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode};
 use ratatui::{
     Frame,
-    buffer::Buffer,
-    layout::{Constraint, Layout, Rect},
+    layout::{Constraint, Layout},
     style::{Color, Style},
-    widgets::{List, ListState, Paragraph, StatefulWidget, Widget},
+    widgets::{Paragraph},
 };
 
 use crate::{
-    phases::{
+    game_ui::Panels, phases::{
         Phase, Transition, UiTheme, enemy_turn::EnemyTurnState, player_attack::PlayerAttackState,
         player_turn::PlayerTurnState,
-    },
-    types::{Coordinate, EntityId, EntityKind, Layer::BackgroundUi, Renderable},
-    ui::Panels,
-    world::World,
+    }, types::{Coordinate, EntityId, EntityKind, Layer::BackgroundUi, Renderable}, ui::select_list::SelectList, world::World,
 };
 
 pub const ACTION_MENU_ITEMS: [&str; 3] = ["Attack", "Skill", "End"];
@@ -119,62 +115,5 @@ impl Phase for ActionMenuState {
             menu_color: Color::Yellow,
             ..Default::default()
         }
-    }
-}
-
-pub struct SelectList {
-    pub items: Vec<String>,
-    state: ListState,
-}
-
-impl SelectList {
-    pub fn new(items: Vec<String>) -> Self {
-        Self {
-            items,
-            state: ListState::default().with_selected(Some(0)),
-        }
-    }
-    pub fn handle_input(&mut self, key: KeyEvent) {
-        match key.code {
-            KeyCode::Up => self.prev(),
-            KeyCode::Down => self.next(),
-            _ => (),
-        }
-    }
-
-    fn next(&mut self) {
-        let n = self.items.len();
-        if n == 0 {
-            return;
-        };
-        let i = self.state.selected().unwrap_or(0);
-        self.state.select(Some((i + 1) % n));
-    }
-
-    fn prev(&mut self) {
-        let n = self.items.len();
-        if n == 0 {
-            return;
-        };
-        let i = self.state.selected().unwrap_or(0);
-        self.state.select(Some((i + n - 1) % n));
-    }
-
-    pub fn selected(&self) -> String {
-        self.items[self.state.selected().unwrap_or_default()].clone()
-    }
-}
-
-impl Widget for &mut SelectList {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        StatefulWidget::render(
-            List::new(self.items.iter().cloned())
-                .style(Style::default().fg(Color::White))
-                .highlight_symbol("> ")
-                .highlight_style(Style::default().fg(Color::Yellow)),
-            area,
-            buf,
-            &mut self.state,
-        );
     }
 }

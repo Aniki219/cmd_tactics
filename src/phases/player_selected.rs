@@ -5,12 +5,10 @@ use crate::{
     phases::{
         Phase, Transition,
         action_menu::{ACTION_MENU_ITEMS, ActionMenuState},
-    },
-    types::{
+    }, types::{
         Layer::{BackgroundUi, ForegroundUi},
         *,
-    },
-    world::World,
+    }, ui::hud::Hud, world::World,
 };
 
 pub struct PlayerSelectedState {
@@ -112,6 +110,10 @@ impl Phase for PlayerSelectedState {
             KeyCode::Down => move_cursor(0, 1),
             _ => Transition::None,
         }
+    }
+
+    fn render(&mut self, world: &World, frame: &mut ratatui::prelude::Frame, panels: &crate::game_ui::Panels) {
+        frame.render_widget(Hud::new(world), panels.hud_area());
     }
 
     fn renderables(&self, _world: &World) -> Vec<Renderable> {

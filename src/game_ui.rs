@@ -14,10 +14,10 @@ use crate::{
     world::World,
 };
 
-pub const GRID_WIDTH: u16 = 44;
+pub const GRID_WIDTH: u16 = 54;
 pub const GRID_HEIGHT: u16 = 20;
 
-const MAX_WIDTH: u16 = 60;
+const MAX_WIDTH: u16 = 70;
 const HUD_HEIGHT: u16 = 4;
 
 pub struct GameUi {}
@@ -45,6 +45,10 @@ impl Panels {
 
     pub fn hud(&self, draw: impl FnOnce(Rect)) {
         draw(self.hud.inner(Margin::new(2, 1)));
+    }
+
+    pub fn hud_area(&self) -> Rect {
+        self.hud.inner(Margin::new(1, 1))
     }
 
     pub fn popup(&mut self, frame: &mut Frame, popup: Popup) {

@@ -1,17 +1,17 @@
 [[cat]]
-name = "charmander"
+name = "charma"
 health = 25
 pos = [4, 4]
 speed = 4
 
 [[cat]]
-name = "squirtle"
+name = "squirt"
 health = 15
 pos = [5, 4]
 speed = 5
 
 [[cat]]
-name = "bulbasaur"
+name = "bulba"
 health = 20
 pos = [6, 4]
 speed = 3

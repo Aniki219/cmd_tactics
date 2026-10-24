@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::ui::{GRID_HEIGHT, GRID_WIDTH};
+use crate::game_ui::{GRID_HEIGHT, GRID_WIDTH};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
 pub struct Coordinate(pub i32, pub i32);

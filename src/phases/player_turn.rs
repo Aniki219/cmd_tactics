@@ -1,8 +1,8 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use ratatui::style::Color::White;
+use ratatui::{Frame, style::Color::White};
 
 use crate::{
-    phases::{Phase, Transition, end_turn::{EndTurnState, Turn}, enemy_turn::EnemyTurnState, player_selected::PlayerSelectedState}, types::{Layer::ForegroundUi, *}, world::World,
+    game_ui::Panels, phases::{Phase, Transition, end_turn::{EndTurnState, Turn}, enemy_turn::EnemyTurnState, player_selected::PlayerSelectedState}, types::{Layer::ForegroundUi, *}, ui::hud::Hud, world::World,
 };
 
 pub struct PlayerTurnState {
@@ -75,6 +75,10 @@ impl Phase for PlayerTurnState {
             return Transition::Reset(Box::new(EndTurnState::new(Turn::Player)));
         }
         Transition::None
+    }
+
+    fn render(&mut self, world: &World, frame: &mut Frame, panels: &Panels) {
+        frame.render_widget(Hud::new(world), panels.hud_area());
     }
 
     fn renderables(&self, _world: &World) -> Vec<Renderable> {

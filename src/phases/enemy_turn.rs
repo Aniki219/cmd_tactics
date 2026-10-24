@@ -10,7 +10,7 @@ use crate::{
         player_turn::PlayerTurnState,
     },
     types::{Cat, Coordinate, Entity, EntityId},
-    ui::{GRID_HEIGHT, GRID_WIDTH},
+    game_ui::{GRID_HEIGHT, GRID_WIDTH},
     world::World,
 };
 

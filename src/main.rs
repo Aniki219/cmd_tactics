@@ -10,13 +10,14 @@ pub mod event;
 pub mod game;
 pub mod setup;
 pub mod tui;
-pub mod ui;
+pub mod game_ui;
 pub mod world;
 
 pub mod phases;
 pub mod types;
 
 pub mod util;
+pub mod ui;
 
 fn main() -> Result<()> {
     util::logging::init()?;
