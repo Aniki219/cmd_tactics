@@ -1,26 +1,17 @@
-use std::collections::VecDeque;
-
-use crossterm::event::{KeyCode, KeyEvent};
+use std::{collections::VecDeque};
 
 use crate::{
     phases::{
-        Phase,
-        Transition::{self},
-        end_turn::{EndTurnState, Turn},
-        player_turn::PlayerTurnState,
-    },
-    types::{Cat, Coordinate, Entity, EntityId},
-    ui::game_ui::{GRID_HEIGHT, GRID_WIDTH},
-    world::World,
+        Phase, Transition::{self}, deal_damage::DealDamageState, end_turn::{EndTurnState, Turn},
+    }, types::{Cat, Coordinate, Entity, EntityId, EntityKind}, ui::game_ui::{GRID_HEIGHT, GRID_WIDTH}, world::World,
 };
 
 const DIST_WEIGHT: i32 = 10;
 const STEP_WEIGHT: i32 = 1;
 
-pub enum EnemySubPhase {
-    Idle,
-    Moved,
-    Acted,
+pub enum SubPhase {
+    Move,
+    Action,
     // I just made this, its time to split enemy actions
     // into sub phases so we can delay between them
     // Also we should use the Timer class here
@@ -28,7 +19,7 @@ pub enum EnemySubPhase {
 
 pub struct EnemyTurnState {
     enemy_ids: VecDeque<EntityId>,
-    // phase: EnemySubPhase
+    current: Option<(EntityId, SubPhase)>,
     delay: i32,
 }
 
@@ -36,11 +27,12 @@ impl EnemyTurnState {
     pub fn new(world: &World) -> Self {
         Self {
             enemy_ids: world.enemies.iter().map(|(id, _)| id.clone()).collect(),
+            current: None,
             delay: 0,
         }
     }
 
-    fn move_and_attack(&mut self, id: &EntityId, world: &mut World) {
+    fn move_to(&mut self, id: EntityId, world: &mut World) {
         let best_tile_coord = {
             let Some(entity) = world.entities.get(&id) else {
                 return;
@@ -55,12 +47,7 @@ impl EnemyTurnState {
             return;
         };
 
-        self.move_to_best_tile(*id, best_tile_coord, world);
-        self.attack_nearest_player(*id, world);
-
-        if let Some(cat) = world.enemies.get_mut(&id) {
-            cat.acted = true;
-        };
+        self.move_to_best_tile(id, best_tile_coord, world);
     }
 
     fn calc_best_tile(&self, entity: &Entity, cat: &Cat, world: &World) -> Option<Coordinate> {
@@ -116,44 +103,51 @@ impl EnemyTurnState {
         world.move_to(id, to);
     }
 
-    fn attack_nearest_player(&self, id: EntityId, world: &World) {
-        let Some(_cat) = world.enemies.get(&id) else {
-            return;
+    fn pick_attack_target(&self, id: EntityId, world: &World) -> Option<EntityId> {
+        let Some(pos) = world.get(id).map(|e| e.pos) else {
+            return None;
         };
+
+        world.get_cats_in_range(pos, Some(EntityKind::Cat(0))).iter().min_by_key(|c| c.health).map(|c| c.id)
     }
 }
 
 impl Phase for EnemyTurnState {
-    fn handle_input(&mut self, key: KeyEvent, _world: &mut World) -> Transition {
-        match key.code {
-            KeyCode::Char(' ') => {
-                Transition::Replace(Box::new(PlayerTurnState::new(Coordinate::center())))
-            }
-            _ => Transition::None,
-        }
-    }
-
     fn on_tick(&mut self, world: &mut World) -> Transition {
         // Wait until delay
         if self.delay < 2 {
             self.delay += 1;
             return Transition::None;
         }
+        self.delay = 0;
 
-        // If there is another enemy in the deque move and attack with it
-        if let Some(enemy_id) = self.enemy_ids.pop_front() {
-            self.move_and_attack(&enemy_id, world);
-            self.delay = 0;
+        let Some((id, subphase)) = self.current.take() else {
+            return match self.enemy_ids.pop_front() {
+                Some(id) if world.enemies.contains_key(&id) => {
+                    self.current = Some((id, SubPhase::Move));
+                    Transition::None
+                } 
+                Some(_) => Transition::None,
+                None => Transition::Reset(Box::new(EndTurnState::new(Turn::Enemy)))
+            };
+        };
+        
+        match subphase {
+            SubPhase::Move => {
+                self.move_to(id, world);
+                self.current = Some((id, SubPhase::Action));
+                Transition::None
+            },
 
-            return Transition::None;
+            SubPhase::Action => {
+                if let Some(cat) = world.cat_mut(&id) {
+                    cat.acted = true;
+                }
+                match self.pick_attack_target(id, world) {
+                    Some(target_id) => Transition::Push(Box::new(DealDamageState::new(id, target_id))),
+                    _ => Transition::None,
+                }
+            }
         }
-
-        // No more enemies to move, end turn
-        return Transition::Reset(Box::new(EndTurnState::new(Turn::Enemy)));
-    }
-
-    fn on_enter(&mut self, world: &mut World) -> Transition {
-        world.players.iter_mut().for_each(|(_, c)| c.acted = false);
-        Transition::None
     }
 }

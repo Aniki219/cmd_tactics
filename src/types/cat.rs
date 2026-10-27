@@ -1,4 +1,4 @@
-use crate::{setup::CatData, types::{EntityId}};
+use crate::{setup::CatData, types::EntityId};
 
 pub struct Cat {
     pub id: EntityId, // The associated Entity id
@@ -20,5 +20,12 @@ impl Cat {
             speed: data.speed,
             acted: false,
         }
+    }
+
+    // Take damage and report death
+    pub fn take_damage(&mut self, damage: i32) -> bool {
+        self.health = (self.health - damage).clamp(0, self.max_health);
+
+        self.health <= 0
     }
 }

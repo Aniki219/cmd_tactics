@@ -7,7 +7,6 @@ use ratatui::{
 };
 
 use crate::{
-    ui::game_ui::Panels,
     phases::{
         Phase, Transition, UiTheme,
         end_turn::{EndTurnState, Turn},
@@ -15,6 +14,7 @@ use crate::{
         player_turn::PlayerTurnState,
     },
     types::{Coordinate, EntityId, EntityKind, Layer::BackgroundUi, Renderable},
+    ui::game_ui::Panels,
     ui::select_list::SelectList,
     world::World,
 };
@@ -49,19 +49,11 @@ impl Phase for ActionMenuState {
             KeyCode::Char('s') => return Transition::Pop,
             KeyCode::Char('a') => match self.menu.selected().as_str() {
                 "Attack" => {
-                    let Some(first_target_pos) = [
-                        Coordinate(1, 0),
-                        Coordinate(-1, 0),
-                        Coordinate(0, -1),
-                        Coordinate(0, 1),
-                    ]
-                    .iter()
-                    .find_map(|c| {
-                        world
-                            .at(pos.plus(*c))
-                            .find(|e| matches!(e.kind, EntityKind::Enemy(_)))
-                            .map(|e| e.pos)
-                    }) else {
+                    let Some(first_target_pos) = world
+                        .get_cats_in_range(pos, Some(EntityKind::Enemy(0)))
+                        .iter()
+                        .find_map(|cat| world.get(cat.id).map(|e| e.pos))
+                    else {
                         return Transition::None;
                     };
                     return Transition::Push(Box::new(PlayerAttackState::new(

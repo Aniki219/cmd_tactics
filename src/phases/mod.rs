@@ -2,9 +2,9 @@ use crossterm::event::KeyEvent;
 use ratatui::Frame;
 
 use crate::{
-    ui::game_ui::Panels,
     log,
     types::Renderable,
+    ui::game_ui::Panels,
     ui::{game_ui::UiTheme, hud::Hud},
     world::World,
 };
@@ -34,7 +34,9 @@ pub trait Phase {
         Transition::None
     }
     fn on_exit(&mut self, _world: &mut World) {}
-    fn handle_input(&mut self, key: KeyEvent, world: &mut World) -> Transition;
+    fn handle_input(&mut self, _key: KeyEvent, _world: &mut World) -> Transition {
+        Transition::None
+    }
     fn renderables(&self, _world: &World) -> Vec<Renderable> {
         vec![]
     }

@@ -2,7 +2,7 @@ use crossterm::event::KeyEvent;
 use ratatui::style::Color;
 
 use crate::{
-    phases::{Phase, Transition, enemy_turn::EnemyTurnState, player_turn::PlayerTurnState},
+    phases::{Phase, Transition, player_turn::PlayerTurnState},
     types::{EntityId, EntityKind, Layer::ForegroundUi, Renderable},
     util::timer::Timer,
     world::World,
@@ -46,7 +46,7 @@ impl Phase for DealDamageState {
                     return Transition::Reset(Box::new(PlayerTurnState::new(target_entity.pos)));
                 }
                 EntityKind::Enemy(_) => {
-                    return Transition::Reset(Box::new(EnemyTurnState::new(world)));
+                    return Transition::Pop;
                 }
                 _ => {
                     todo!();
@@ -78,8 +78,13 @@ impl Phase for DealDamageState {
         });
 
         // Write phase: the shared borrows above are no longer used, so they end here
-        if let Some(target) = world.cat_mut(&self.target_id) {
-            target.health -= self.damage;
+        let died = world
+            .cat_mut(&self.target_id)
+            .map(|t| t.take_damage(self.damage))
+            .unwrap_or(false);
+
+        if died {
+            world.despawn(self.target_id);
         }
     
         Transition::None

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use ratatui::style::Color;
+use std::mem::discriminant;
 
 use crate::{
     log,
@@ -127,5 +128,25 @@ impl World {
 
     pub fn get_cat(&self, id: &EntityId) -> Option<&Cat> {
         self.players.get(id).or_else(|| self.enemies.get(id))
+    }
+
+    pub fn get_cats_in_range(&self, pos: Coordinate, kind: Option<EntityKind>) -> Vec<&Cat> {
+        [
+            Coordinate(1, 0),
+            Coordinate(-1, 0),
+            Coordinate(0, -1),
+            Coordinate(0, 1),
+        ]
+        .iter()
+        .map(|c| self.at(pos.plus(*c)))
+        .flatten()
+        .filter_map(|e| {
+            if kind.is_none_or(|k| discriminant(&k) == discriminant(&e.kind)) {
+                return Some(e.id);
+            }
+            None
+        })
+        .filter_map(|id| self.get_cat(&id))
+        .collect::<Vec<&Cat>>()
     }
 }
