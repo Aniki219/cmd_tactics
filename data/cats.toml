@@ -1,35 +1,59 @@
-[[cat]]
-name = "charma"
-health = 25
-pos = [4, 4]
-speed = 4
+[[cats]]
+name = "Flareon"
+health = "B"
+attack = "A-"
+defense = "B"
+special = "B"
+resistance = "D"
+speed = "B+"
+growth_rate = "B+"
 
-[[cat]]
-name = "squirt"
-health = 15
-pos = [5, 4]
-speed = 5
+[[cats]]
+name = "Jolteon"
+health = "B"
+attack = "B-"
+defense = "B-"
+special = "A+"
+resistance = "B-"
+speed = "A+"
+growth_rate = "B+"
 
-[[cat]]
-name = "bulba"
-health = 20
-pos = [6, 4]
-speed = 3
+[[cats]]
+name = "Vaporeon"
+health = "B"
+attack = "B-"
+defense = "A-"
+special = "B+"
+resistance = "A"
+speed = "B"
+growth_rate = "B+"
 
-[[enemy]]
-name = "bulbasaur"
-health = 20
-pos = [7, 4]
-speed = 4
+[[cats]]
+name = "Leafeon"
+health = "B"
+attack = "A"
+defense = "C"
+special = "B"
+resistance = "B"
+speed = "A-"
+growth_rate = "B+"
 
-[[enemy]]
-name = "bulbasaur"
-health = 20
-pos = [10, 10]
-speed = 4
+[[cats]]
+name = "Glaceon"
+health = "B"
+attack = "B"
+defense = "A-"
+special = "B+"
+resistance = "B"
+speed = "B-"
+growth_rate = "B+"
 
-[[enemy]]
-name = "bulbasaur"
-health = 20
-pos = [12, 10]
-speed = 4
+[[cats]]
+name = "Sylveon"
+health = "A"
+attack = "B"
+defense = "B-"
+special = "B"
+resistance = "B"
+speed = "B-"
+growth_rate = "B+"

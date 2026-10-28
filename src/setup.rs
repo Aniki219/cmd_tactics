@@ -2,8 +2,7 @@ use ratatui::style::Color;
 use serde::Deserialize;
 
 use crate::{
-    types::{Cat, Coordinate, EntityKind, Layer},
-    world::World,
+    types::{Cat, Coordinate, EntityKind, Grade, Layer}, world::World,
 };
 
 pub const CAT_COLORS: [Color; 10] = [
@@ -19,24 +18,27 @@ pub const CAT_COLORS: [Color; 10] = [
     Color::Red,
 ];
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct CatToml {
-    pub cat: Vec<CatData>,
-    pub enemy: Vec<CatData>,
+    pub cats: Vec<CatData>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Deserialize, Clone)]
 pub struct CatData {
     pub name: String,
-    pub health: i32,
-    pub pos: Coordinate,
-    pub speed: i32,
+    pub health: Grade,
+    pub attack: Grade,
+    pub defense: Grade,
+    pub special: Grade,
+    pub resistance: Grade,
+    pub speed: Grade,
+    pub growth_rate: String,
 }
 
-pub fn add_player_cat(world: &mut World, data: CatData) {
+pub fn add_player_cat(world: &mut World, pos: Coordinate, data: &CatData) {
     let id = world.spawn(
         EntityKind::Cat(world.players.len() as i32 + 1),
-        data.pos,
+        pos,
         Layer::Entity,
         CAT_COLORS[world.players.len() % CAT_COLORS.len()],
     );
@@ -44,10 +46,10 @@ pub fn add_player_cat(world: &mut World, data: CatData) {
     world.players.insert(id, Cat::new(id, data));
 }
 
-pub fn add_enemy_cat(world: &mut World, data: CatData) {
+pub fn add_enemy_cat(world: &mut World, pos: Coordinate, data: &CatData) {
     let id = world.spawn(
         EntityKind::Enemy(world.enemies.len() as i32 + 1),
-        data.pos,
+        pos,
         Layer::Entity,
         Color::Red,
     );

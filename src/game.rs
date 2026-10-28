@@ -1,5 +1,6 @@
 use crossterm::event::KeyEvent;
 use ratatui::Frame;
+use serde::{Deserialize};
 
 use crate::{
     log,
@@ -10,7 +11,7 @@ use crate::{
         init_game::InitGame,
         player_turn::PlayerTurnState,
     },
-    setup::{CatToml, add_enemy_cat, add_player_cat},
+    setup::{CatData, add_enemy_cat, add_player_cat},
     types::{Coordinate, EntityId},
     ui::game_ui::GameUi,
     util::load::load_toml,
@@ -23,6 +24,49 @@ pub struct Game {
     pub ui: GameUi,
 }
 
+#[derive(Deserialize)]
+pub struct MissionReward {
+    money: i32,
+    xp: i32,
+}
+
+#[derive(Deserialize)]
+pub struct PlayerSpawn {
+    slot: usize,
+    pos: Coordinate,
+}
+
+#[derive(Deserialize)]
+pub struct EnemySpawn {
+    name: String,
+    pos: Coordinate,
+}
+
+#[derive(Deserialize)]
+pub struct MissionData {
+    name: String,
+    reward: MissionReward,
+    players: Vec<PlayerSpawn>,
+    enemies: Vec<EnemySpawn>,
+}
+
+#[derive(Deserialize)]
+pub struct PlayerCatsFileData {
+    cats: Vec<PlayerCatData>,
+}
+
+#[derive(Deserialize)]
+pub struct PlayerCatData {
+    id: i32,
+    name: String,
+    xp: i32,
+}
+
+#[derive(Deserialize)]
+pub struct CatsFileData {
+    cats: Vec<CatData>,
+}
+
 impl Game {
     pub fn new() -> Self {
         let mut world = World::new();
@@ -31,20 +75,57 @@ impl Game {
         Self { world, phases, ui }
     }
 
+    fn spawn_mission_cats(&mut self) -> Result<(), String> {
+        let slots = vec![1, 2, 3];
+        let cat_data = load_toml::<CatsFileData>("data/cats.toml")
+            .map(|f| f.cats)
+            .expect("Failed to read cats data from file");
+        let player_cats = load_toml::<PlayerCatsFileData>("data/player_cats.toml")
+            .map(|f| f.cats)
+            .expect("Failed to read player cats data from file");
+        let mission_data = load_toml::<MissionData>("data/missions/mission_01.toml")
+            .expect("Failed to read mission data from file");
+
+        for spawn in &mission_data.players {
+            let cat_id = slots
+                .get(spawn.slot - 1)
+                .ok_or_else(|| format!("mission slot {} has no assigned cat", spawn.slot))?;
+
+            let player_cat = player_cats
+                .iter()
+                .find(|c| c.id == *cat_id)
+                .ok_or_else(|| format!("player cat id {} not found", cat_id))?;
+
+            let base_stats = cat_data
+                .iter()
+                .find(|c| c.name == player_cat.name)
+                .ok_or_else(|| format!("no cat definition named '{}'", player_cat.name))?;
+
+            log!("Spawning cat {}", base_stats.name);
+            add_player_cat(&mut self.world, spawn.pos, base_stats);
+        }
+
+        for spawn in &mission_data.enemies {
+            let base_stats = cat_data
+                .iter()
+                .find(|c| c.name == spawn.name)
+                .ok_or_else(|| format!("no cat definition named '{}'", spawn.name))?;
+
+            log!("Spawning enemy {}", spawn.name);
+            add_enemy_cat(&mut self.world, spawn.pos, base_stats);
+        }
+
+        Ok(())
+    }
+
     pub fn init(&mut self) {
         log!("Spawning cats");
-        match load_toml::<CatToml>("data/cats.toml") {
-            Ok(cat_toml) => {
-                for cat_data in cat_toml.cat {
-                    log!("Spawning cat {} hp: {}", cat_data.name, cat_data.health);
-                    add_player_cat(&mut self.world, cat_data);
-                }
-                for cat_data in cat_toml.enemy {
-                    log!("Spawning enemy {} hp: {}", cat_data.name, cat_data.health);
-                    add_enemy_cat(&mut self.world, cat_data);
-                }
-            }
-            Err(e) => log!("Failed to load cats.toml: {}", e),
+        let res = self.spawn_mission_cats();
+        if res.is_err() {
+            log!(
+                "Spawn mission cats errored {}",
+                res.err().unwrap_or_default()
+            )
         }
 
         let test_string = "start";

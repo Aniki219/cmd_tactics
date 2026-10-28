@@ -1,0 +1,14 @@
+[[cats]]
+id = 1
+name = "Flareon"
+xp = 100
+
+[[cats]]
+id = 2
+name = "Jolteon"
+xp = 80
+
+[[cats]]
+id = 3
+name = "Vaporeon"
+xp = 0

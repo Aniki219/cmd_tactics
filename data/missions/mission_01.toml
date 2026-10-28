@@ -1,0 +1,29 @@
+name = "First Mission"
+
+[reward]
+money = 100
+xp = 50
+
+[[players]]
+slot = 1
+pos = [4, 4]
+
+[[players]]
+slot = 2
+pos = [5, 4]
+
+[[players]]
+slot = 3
+pos = [6, 4]
+
+[[enemies]]
+name = "Leafeon"
+pos = [7, 4]
+
+[[enemies]]
+name = "Glaceon"
+pos = [10, 10]
+
+[[enemies]]
+name = "Sylveon"
+pos = [12, 10]
