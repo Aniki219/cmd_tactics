@@ -53,6 +53,8 @@ impl World {
         }
 
         self.entities.remove(&id);
+        self.players.remove(&id);
+        self.enemies.remove(&id);
     }
 
     pub fn move_by(&mut self, id: EntityId, by: Coordinate) {

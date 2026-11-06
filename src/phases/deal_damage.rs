@@ -1,5 +1,7 @@
 use crossterm::event::KeyEvent;
-use ratatui::style::Color;
+use ratatui::{
+    layout::HorizontalAlignment::{Left}, style::Color, text::Line, widgets::{Block, Padding, Paragraph},
+};
 
 use crate::{
     phases::{Phase, Transition, player_turn::PlayerTurnState},
@@ -21,7 +23,7 @@ impl DealDamageState {
         Self {
             source_id,
             target_id,
-            timer: Timer::new(4),
+            timer: Timer::new(6),
             damage: 0,
             damage_number: None,
         }
@@ -66,8 +68,8 @@ impl Phase for DealDamageState {
         ) else {
             return Transition::None;
         };
-        
-        self.damage = (source.health - target.health / 2).clamp(0, 99);
+
+        self.damage = (source.attack - target.defense / 2).clamp(0, 99);
 
         self.damage_number = Some(Renderable {
             pos: target_entity.pos,
@@ -78,19 +80,58 @@ impl Phase for DealDamageState {
         });
 
         // Write phase: the shared borrows above are no longer used, so they end here
-        let died = world
+        world
             .cat_mut(&self.target_id)
-            .map(|t| t.take_damage(self.damage))
-            .unwrap_or(false);
+            .map(|t| t.take_damage(self.damage));
 
-        if died {
+        Transition::None
+    }
+
+    fn on_exit(&mut self, world: &mut World) {
+        if let Some(target) = world.get_cat(&self.target_id)
+            && target.health <= 0
+        {
             world.despawn(self.target_id);
         }
-    
-        Transition::None
     }
 
     fn renderables(&self, _world: &World) -> Vec<Renderable> {
         self.damage_number.clone().into_iter().collect()
+    }
+
+    fn render(
+        &mut self,
+        world: &World,
+        frame: &mut ratatui::prelude::Frame,
+        panels: &mut crate::ui::game_ui::Panels,
+    ) {
+        let (Some(source), Some(target)) = (
+            world.get_cat(&self.source_id),
+            world.get_cat(&self.target_id),
+        ) else {
+            return;
+        };
+
+        let mut lines = Vec::<Line>::new();
+
+        lines.push(Line::raw(format!(
+            "{} attacks {}",
+            source.name, target.name
+        )));
+
+        if self.damage > 0 {
+            lines.push(Line::raw(format!(
+                "{} takes {} damage",
+                target.name,
+                self.damage
+            )));
+        };
+
+        frame.render_widget(
+            Paragraph::new(lines)
+                .alignment(Left)
+                .block(Block::new().padding(Padding::new(1, 1, 0, 0))),
+            panels.hud_area(),
+        );
     }
 }

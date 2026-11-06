@@ -3,19 +3,13 @@ use ratatui::Frame;
 use serde::{Deserialize};
 
 use crate::{
-    log,
-    phases::{
+    log, phases::{
         PhaseStack,
         action_menu::{ACTION_MENU_ITEMS, ActionMenuState},
         enemy_turn::EnemyTurnState,
         init_game::InitGame,
         player_turn::PlayerTurnState,
-    },
-    setup::{CatData, add_enemy_cat, add_player_cat},
-    types::{Coordinate, EntityId},
-    ui::game_ui::GameUi,
-    util::load::load_toml,
-    world::World,
+    }, setup::{CatData, add_enemy_cat, add_player_cat}, types::{CatStats, Coordinate, EntityId}, ui::game_ui::GameUi, util::load::load_toml, world::World,
 };
 
 pub struct Game {
@@ -24,6 +18,7 @@ pub struct Game {
     pub ui: GameUi,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct MissionReward {
     money: i32,
@@ -39,9 +34,11 @@ pub struct PlayerSpawn {
 #[derive(Deserialize)]
 pub struct EnemySpawn {
     name: String,
+    level: i32,
     pos: Coordinate,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct MissionData {
     name: String,
@@ -55,11 +52,12 @@ pub struct PlayerCatsFileData {
     cats: Vec<PlayerCatData>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize)]
 pub struct PlayerCatData {
     id: i32,
-    name: String,
-    xp: i32,
+    pub name: String,
+    pub xp: i32,
 }
 
 #[derive(Deserialize)]
@@ -102,7 +100,7 @@ impl Game {
                 .ok_or_else(|| format!("no cat definition named '{}'", player_cat.name))?;
 
             log!("Spawning cat {}", base_stats.name);
-            add_player_cat(&mut self.world, spawn.pos, base_stats);
+            add_player_cat(&mut self.world, spawn.pos, base_stats, &CatStats{level: None, xp: Some(player_cat.xp)});
         }
 
         for spawn in &mission_data.enemies {
@@ -112,7 +110,7 @@ impl Game {
                 .ok_or_else(|| format!("no cat definition named '{}'", spawn.name))?;
 
             log!("Spawning enemy {}", spawn.name);
-            add_enemy_cat(&mut self.world, spawn.pos, base_stats);
+            add_enemy_cat(&mut self.world, spawn.pos, base_stats, &CatStats{level: Some(spawn.level), xp: None});
         }
 
         Ok(())

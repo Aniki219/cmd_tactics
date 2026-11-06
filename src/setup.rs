@@ -2,7 +2,8 @@ use ratatui::style::Color;
 use serde::Deserialize;
 
 use crate::{
-    types::{Cat, Coordinate, EntityKind, Grade, Layer}, world::World,
+    types::{Cat, CatStats, Coordinate, EntityKind, Grade, Layer},
+    world::World,
 };
 
 pub const CAT_COLORS: [Color; 10] = [
@@ -32,10 +33,15 @@ pub struct CatData {
     pub special: Grade,
     pub resistance: Grade,
     pub speed: Grade,
-    pub growth_rate: String,
+    pub growth_rate: Grade,
 }
 
-pub fn add_player_cat(world: &mut World, pos: Coordinate, data: &CatData) {
+pub fn add_player_cat(
+    world: &mut World,
+    pos: Coordinate,
+    base_stats: &CatData,
+    cat_stats: &CatStats,
+) {
     let id = world.spawn(
         EntityKind::Cat(world.players.len() as i32 + 1),
         pos,
@@ -43,10 +49,12 @@ pub fn add_player_cat(world: &mut World, pos: Coordinate, data: &CatData) {
         CAT_COLORS[world.players.len() % CAT_COLORS.len()],
     );
 
-    world.players.insert(id, Cat::new(id, data));
+    world
+        .players
+        .insert(id, Cat::new(id, base_stats, cat_stats));
 }
 
-pub fn add_enemy_cat(world: &mut World, pos: Coordinate, data: &CatData) {
+pub fn add_enemy_cat(world: &mut World, pos: Coordinate, data: &CatData, cat_stats: &CatStats) {
     let id = world.spawn(
         EntityKind::Enemy(world.enemies.len() as i32 + 1),
         pos,
@@ -54,5 +62,5 @@ pub fn add_enemy_cat(world: &mut World, pos: Coordinate, data: &CatData) {
         Color::Red,
     );
 
-    world.enemies.insert(id, Cat::new(id, data));
+    world.enemies.insert(id, Cat::new(id, data, cat_stats));
 }

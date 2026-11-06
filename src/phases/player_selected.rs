@@ -69,10 +69,10 @@ impl Phase for PlayerSelectedState {
 
         for i in -step..=step {
             for j in -step..=step {
-                if i.abs() + j.abs() < 4 {
+                if i.abs() + j.abs() < step {
                     self.tiles.push(Renderable {
                         pos: origin.plus(Coordinate(i, j)),
-                        glyph: String::from("* "),
+                        glyph: String::from(MOVE_TILE),
                         color: White,
                         layer: BackgroundUi,
                         blink: false,
