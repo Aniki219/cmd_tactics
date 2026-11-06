@@ -23,12 +23,12 @@ pub struct CatStats {
 
 impl Cat {
     pub fn new(id: EntityId, base_stats: &CatData, cat_stats: &CatStats) -> Self {
-        let max_health = base_stats.health.value() * 2;
-
         let level = cat_stats.level.unwrap_or_else(|| {
             let xp = cat_stats.xp.expect("no level or xp");
-            Cat::xp_to_level(xp, base_stats.growth_rate.value())
+            Cat::xp_to_level(xp, base_stats.growth_rate.value(0))
         });
+
+        let max_health = base_stats.health.value(level) * 2;
 
         Self {
             id,
@@ -36,12 +36,12 @@ impl Cat {
             level,
             health: max_health,
             max_health,
-            attack: base_stats.attack.value(),
-            defense: base_stats.defense.value(),
-            special: base_stats.special.value(),
-            resistance: base_stats.resistance.value(),
-            speed: (base_stats.speed.value() / 3).max(1) * 2,
-            growth_rate: base_stats.growth_rate.value(),
+            attack: base_stats.attack.value(level),
+            defense: base_stats.defense.value(level),
+            special: base_stats.special.value(level),
+            resistance: base_stats.resistance.value(level),
+            speed: (base_stats.speed.value(0) / 3).max(1) * 2,
+            growth_rate: base_stats.growth_rate.value(level),
             acted: false,
         }
     }
