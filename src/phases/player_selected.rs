@@ -5,14 +5,10 @@ use crate::{
     phases::{
         Phase, Transition,
         action_menu::{ACTION_MENU_ITEMS, ActionMenuState},
-    },
-    types::{
+    }, types::{
         Layer::{BackgroundUi, ForegroundUi},
         *,
-    },
-    ui::game_ui::Panels,
-    ui::{cat_details::CatDetails, hud::Hud},
-    world::World,
+    }, ui::{cat_details::{CatDetails, CatDetailsWidgetState}, game_ui::Panels, hud::Hud}, world::World,
 };
 
 pub struct PlayerSelectedState {
@@ -119,8 +115,12 @@ impl Phase for PlayerSelectedState {
     fn render(&mut self, world: &World, frame: &mut Frame, panels: &mut Panels) {
         frame.render_widget(Hud::new(world), panels.hud_area());
 
-        if let Some(cat) = world.get_cat(&self.cat_id) {
-            frame.render_widget(CatDetails::new(&cat), panels.menu_area());
+        if let (Some(cat), Some(entity)) = (world.get_cat(&self.cat_id), world.get(self.cat_id)) {
+            let (glyph, color) = entity.glyph_and_color();
+            frame.render_stateful_widget(CatDetails::new(&cat), panels.menu_area(), &mut CatDetailsWidgetState{
+                glyph,
+                color,
+            });
         }
     }
 

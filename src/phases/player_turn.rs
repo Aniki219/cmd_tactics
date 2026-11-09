@@ -10,7 +10,11 @@ use crate::{
         player_selected::PlayerSelectedState,
     },
     types::{Layer::ForegroundUi, *},
-    ui::{cat_details::CatDetails, game_ui::Panels, hud::Hud},
+    ui::{
+        cat_details::{CatDetails, CatDetailsWidgetState},
+        game_ui::Panels,
+        hud::Hud,
+    },
     world::World,
 };
 
@@ -92,8 +96,13 @@ impl Phase for PlayerTurnState {
         if let Some(hover) = world.at(self.cursor.pos).find(|e| {
             matches!(e.kind, EntityKind::Cat(_)) || matches!(e.kind, EntityKind::Enemy(_))
         }) {
-            if let Some(cat) = world.get_cat(&hover.id) {
-                frame.render_widget(CatDetails::new(cat), panels.menu_area());
+            if let (Some(cat), Some(entity)) = (world.get_cat(&hover.id), world.get(hover.id)) {
+                let (glyph, color) = entity.glyph_and_color();
+                frame.render_stateful_widget(
+                    CatDetails::new(cat),
+                    panels.menu_area(),
+                    &mut CatDetailsWidgetState { glyph, color },
+                );
             }
         }
     }

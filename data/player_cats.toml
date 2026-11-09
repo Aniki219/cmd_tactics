@@ -1,14 +1,14 @@
 [[cats]]
 id = 1
 name = "Flareon"
-xp = 100
+xp = 10000
 
 [[cats]]
 id = 2
 name = "Jolteon"
-xp = 80
+xp = 8000
 
 [[cats]]
 id = 3
 name = "Vaporeon"
-xp = 10
+xp = 1000

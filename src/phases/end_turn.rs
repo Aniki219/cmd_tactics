@@ -28,8 +28,8 @@ impl EndTurnState {
     pub fn new(turn: Turn) -> Self {
         Self {
             turn,
-            pre_delay: Timer::new(4),
-            delay: Timer::new(10),
+            pre_delay: Timer::new(2),
+            delay: Timer::new(7),
             post_delay: Timer::new(2),
         }
     }

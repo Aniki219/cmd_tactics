@@ -18,6 +18,7 @@ pub mod init_game;
 pub mod player_attack;
 pub mod player_selected;
 pub mod player_turn;
+pub mod drop_loot;
 
 pub trait Phase {
     fn name(&self) -> &str {

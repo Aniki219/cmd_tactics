@@ -1,14 +1,16 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     layout::{Constraint, Layout},
-    style::{Color::Red, Stylize},
-    widgets::Paragraph,
+    style::{Color::Red}
 };
 
 use crate::{
     phases::{Phase, Transition, deal_damage::DealDamageState},
     types::{Coordinate, EntityId, EntityKind, Layer::ForegroundUi, Renderable},
-    ui::{cat_details::CatDetails, hud::Hud},
+    ui::{
+        cat_details::{CatDetails, CatDetailsWidgetState},
+        hud::Hud,
+    },
     world::World,
 };
 
@@ -90,24 +92,31 @@ impl Phase for PlayerAttackState {
     ) {
         frame.render_widget(Hud::new(world), panels.hud_area());
 
-        let [attacker, attacker_stats, arrow, target, target_stats] = Layout::vertical([
-            Constraint::Length(1),
-            Constraint::Fill(1),
-            Constraint::Length(4),
-            Constraint::Length(1),
-            Constraint::Fill(1),
-        ])
-        .areas(panels.menu_area());
+        let [attacker_stats, target_stats] =
+            Layout::vertical([Constraint::Fill(1), Constraint::Fill(1)]).areas(panels.menu_area());
 
-        if let Some(source_cat) = world.get_cat(&self.cat_id) {
-            frame.render_widget(Paragraph::new("Attacker".blue()).centered(), attacker);
-            frame.render_widget(CatDetails::new(source_cat), attacker_stats);
+        if let (Some(source_cat), Some(source_entity)) =
+            (world.get_cat(&self.cat_id), world.get(self.cat_id))
+        {
+            let (glyph, color) = source_entity.glyph_and_color();
+            frame.render_stateful_widget(
+                CatDetails::new(source_cat),
+                attacker_stats,
+                &mut CatDetailsWidgetState { glyph, color },
+            );
         }
 
-        if let Some(target_cat) = world.at(self.cursor.pos).find_map(|e| world.get_cat(&e.id)) {
-            frame.render_widget(Paragraph::new("\n|\nV\n\n").centered(), arrow);
-            frame.render_widget(Paragraph::new("Target".red()).centered(), target);
-            frame.render_widget(CatDetails::new(target_cat), target_stats);
+        if let Some((target_cat, target_entity)) = world.at(self.cursor.pos).find_map(|e| {
+            let cat = world.get_cat(&e.id);
+            let entity = world.get(e.id);
+            cat.zip(entity)
+        }) {
+            let (glyph, color) = target_entity.glyph_and_color();
+            frame.render_stateful_widget(
+                CatDetails::new(target_cat),
+                target_stats,
+                &mut CatDetailsWidgetState { glyph, color },
+            );
         }
     }
 }

@@ -3,7 +3,10 @@ use std::collections::HashMap;
 use ratatui::{
     Frame,
     layout::{Alignment, Constraint, Flex, Layout, Margin, Rect},
-    style::{Color, Style},
+    style::{
+        Color::{self, White, Yellow},
+        Style,
+    },
     text::{Line, Span},
     widgets::{Block, BorderType, Borders, Clear, Paragraph, Wrap},
 };
@@ -44,6 +47,32 @@ impl Default for UiTheme {
     }
 }
 
+impl UiTheme {
+    pub fn focus_field() -> UiTheme {
+        UiTheme {
+            field_color: Yellow,
+            menu_color: White,
+            hud_color: White,
+        }
+    }
+
+    pub fn focus_menu() -> UiTheme {
+        UiTheme {
+            field_color: White,
+            menu_color: Yellow,
+            hud_color: White,
+        }
+    }
+
+    pub fn focus_hud() -> UiTheme {
+        UiTheme {
+            field_color: White,
+            menu_color: White,
+            hud_color: Yellow,
+        }
+    }
+}
+
 pub struct Panels {
     field: Rect,
     menu: Rect,
@@ -72,7 +101,7 @@ impl Panels {
     }
 
     pub fn popup(&mut self, frame: &mut Frame, popup: PopupState) {
-        let area = centered_rect(self.field.width / 2, 3, self.field);
+        let area = centered_rect(self.field.width / 3, 3, self.field);
         let popup = Paragraph::new(popup.body)
             .wrap(Wrap { trim: true })
             .style(popup.color)
