@@ -1,15 +1,21 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use ratatui::{Frame};
+use ratatui::Frame;
 
 use crate::{
-    phases::{Phase, Transition, mission_complete::MissionCompleteState, player_turn::PlayerTurnState}, types::{Cat, Coordinate, EntityId}, ui::{
+    phases::{
+        Phase, Transition, mission_complete::MissionCompleteState, player_turn::PlayerTurnState,
+    },
+    types::{Cat, Coordinate, EntityId},
+    ui::{
         game_ui::{Panels, UiTheme},
         text_cycler::{CyclerEvent::Finished, TextCycler},
-    }, world::World,
+    },
+    world::World,
 };
 
 pub struct DropLootState {
     target_id: EntityId,
+    target_pos: Coordinate,
     text: TextCycler,
 }
 
@@ -21,26 +27,25 @@ impl DropLootState {
         ]);
         Self {
             target_id: target.id,
+            target_pos: Coordinate::default(),
             text,
         }
     }
 
     fn check_battle_end(&mut self, world: &mut World) -> Option<Transition> {
         if world.enemies.len() <= 0 {
-            return Some(Transition::Reset(Box::new(MissionCompleteState::new())))
+            return Some(Transition::Reset(Box::new(MissionCompleteState::new())));
         }
-        let pos = world
-            .get(self.target_id)
-            .map_or(Coordinate::center(), |t| t.pos);
-        return Some(Transition::Reset(Box::new(PlayerTurnState::new(pos))));
+        return Some(Transition::Reset(Box::new(PlayerTurnState::new(
+            self.target_pos,
+        ))));
     }
 }
 
 impl Phase for DropLootState {
     fn on_enter(&mut self, world: &mut World) -> Transition {
-        if let Some(target) = world.get_cat(&self.target_id)
-            && target.health <= 0
-        {
+        if let Some(target) = world.get(self.target_id) {
+            self.target_pos = target.pos;
             world.despawn(self.target_id);
         }
         Transition::None

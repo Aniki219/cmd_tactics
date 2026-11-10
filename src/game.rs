@@ -1,68 +1,26 @@
 use crossterm::event::KeyEvent;
 use ratatui::Frame;
-use serde::{Deserialize};
 
 use crate::{
-    log, phases::{
+    data::{GameData, load::load_toml, mission::MissionData},
+    log,
+    mission::spawn_mission,
+    phases::{
         PhaseStack,
         action_menu::{ACTION_MENU_ITEMS, ActionMenuState},
         enemy_turn::EnemyTurnState,
         init_game::InitGame,
         player_turn::PlayerTurnState,
-    }, setup::{CatData, add_enemy_cat, add_player_cat}, types::{CatStats, Coordinate, EntityId}, ui::game_ui::GameUi, util::load::load_toml, world::World,
+    },
+    types::{Coordinate, EntityId},
+    ui::game_ui::GameUi,
+    world::World,
 };
 
 pub struct Game {
     pub world: World,
     pub phases: PhaseStack,
     pub ui: GameUi,
-}
-
-#[allow(dead_code)]
-#[derive(Deserialize)]
-pub struct MissionReward {
-    money: i32,
-    xp: i32,
-}
-
-#[derive(Deserialize)]
-pub struct PlayerSpawn {
-    slot: usize,
-    pos: Coordinate,
-}
-
-#[derive(Deserialize)]
-pub struct EnemySpawn {
-    name: String,
-    level: i32,
-    pos: Coordinate,
-}
-
-#[allow(dead_code)]
-#[derive(Deserialize)]
-pub struct MissionData {
-    name: String,
-    reward: MissionReward,
-    players: Vec<PlayerSpawn>,
-    enemies: Vec<EnemySpawn>,
-}
-
-#[derive(Deserialize)]
-pub struct PlayerCatsFileData {
-    cats: Vec<PlayerCatData>,
-}
-
-#[allow(dead_code)]
-#[derive(Deserialize)]
-pub struct PlayerCatData {
-    id: i32,
-    pub name: String,
-    pub xp: i32,
-}
-
-#[derive(Deserialize)]
-pub struct CatsFileData {
-    cats: Vec<CatData>,
 }
 
 impl Game {
@@ -73,59 +31,25 @@ impl Game {
         Self { world, phases, ui }
     }
 
-    fn spawn_mission_cats(&mut self) -> Result<(), String> {
-        let slots = vec![1, 2, 3];
-        let cat_data = load_toml::<CatsFileData>("data/cats.toml")
-            .map(|f| f.cats)
-            .expect("Failed to read cats data from file");
-        let player_cats = load_toml::<PlayerCatsFileData>("data/player_cats.toml")
-            .map(|f| f.cats)
-            .expect("Failed to read player cats data from file");
-        let mission_data = load_toml::<MissionData>("data/missions/mission_01.toml")
-            .expect("Failed to read mission data from file");
-
-        for spawn in &mission_data.players {
-            let cat_id = slots
-                .get(spawn.slot - 1)
-                .ok_or_else(|| format!("mission slot {} has no assigned cat", spawn.slot))?;
-
-            let player_cat = player_cats
-                .iter()
-                .find(|c| c.id == *cat_id)
-                .ok_or_else(|| format!("player cat id {} not found", cat_id))?;
-
-            let base_stats = cat_data
-                .iter()
-                .find(|c| c.name == player_cat.name)
-                .ok_or_else(|| format!("no cat definition named '{}'", player_cat.name))?;
-
-            log!("Spawning cat {}", base_stats.name);
-            add_player_cat(&mut self.world, spawn.pos, base_stats, &CatStats{level: None, xp: Some(player_cat.xp)});
+    pub fn init(&mut self) {
+        if let Err(err) = self.load_mission() {
+            log!("Failed to load mission {}", err);
+            return;
         }
-
-        for spawn in &mission_data.enemies {
-            let base_stats = cat_data
-                .iter()
-                .find(|c| c.name == spawn.name)
-                .ok_or_else(|| format!("no cat definition named '{}'", spawn.name))?;
-
-            log!("Spawning enemy {}", spawn.name);
-            add_enemy_cat(&mut self.world, spawn.pos, base_stats, &CatStats{level: Some(spawn.level), xp: None});
-        }
-
-        Ok(())
+        self.start_phase();
     }
 
-    pub fn init(&mut self) {
-        log!("Spawning cats");
-        let res = self.spawn_mission_cats();
-        if res.is_err() {
-            log!(
-                "Spawn mission cats errored {}",
-                res.err().unwrap_or_default()
-            )
-        }
+    fn load_mission(&mut self) -> Result<(), String> {
+        let game_data = GameData::load()?;
+        let mission_data = load_toml::<MissionData>("data/missions/mission_01.toml")
+            .map_err(|e| format!("mission_01.toml: {e:?}"))?;
 
+        log!("Spawning mission");
+        let loadout = [1, 2, 3];
+        spawn_mission(&mut self.world, &game_data, &mission_data, &loadout)
+    }
+
+    fn start_phase(&mut self) {
         let test_string = "start";
 
         match test_string {

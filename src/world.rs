@@ -4,9 +4,13 @@ use ratatui::style::Color;
 use std::mem::discriminant;
 
 use crate::{
-    log,
-    types::{Cat, Coordinate, Entity, EntityId, EntityKind, Layer, Renderable},
+    data::species::Species, log, types::{Abilities, Cat, Coordinate, Entity, EntityId, EntityKind, Experience, Layer, Renderable}, util::colors::CAT_COLORS,
 };
+
+pub enum Side {
+    Player,
+    Enemy,
+}
 
 pub struct World {
     pub entities: HashMap<EntityId, Entity>,
@@ -41,6 +45,35 @@ impl World {
 
         log!("Spawned {} id {}", kind, id);
         entity.id
+    }
+
+    pub fn spawn_cat(
+        &mut self,
+        side: Side,
+        pos: Coordinate,
+        species: &Species,
+        progression: Experience,
+        abilities: Abilities,
+    ) {
+        let (kind, color) = match side {
+            Side::Player => {
+                let n = self.players.len();
+                (
+                    EntityKind::Cat(n as i32 + 1),
+                    CAT_COLORS[n % CAT_COLORS.len()],
+                )
+            }
+            Side::Enemy => (
+                EntityKind::Enemy(self.enemies.len() as i32 + 1),
+                Color::Red,
+            ),
+        };
+        let id = self.spawn(kind, pos, Layer::Entity, color);
+        let cat = Cat::new(id, species, progression, abilities);
+        match side {
+            Side::Player => self.players.insert(id, cat),
+            Side::Enemy => self.enemies.insert(id, cat),
+        };
     }
 
     pub fn despawn(&mut self, id: EntityId) {

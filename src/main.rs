@@ -8,10 +8,11 @@ use tui::Tui;
 pub mod app;
 pub mod event;
 pub mod game;
-pub mod setup;
 pub mod tui;
 pub mod world;
 
+pub mod data;
+pub mod mission;
 pub mod phases;
 pub mod types;
 

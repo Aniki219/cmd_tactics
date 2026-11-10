@@ -2,6 +2,8 @@
 id = 1
 name = "Flareon"
 xp = 10000
+[cats.abilities]
+q = 'aloof_walk'
 
 [[cats]]
 id = 2

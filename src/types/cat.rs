@@ -1,4 +1,8 @@
-use crate::{setup::CatData, types::EntityId};
+use serde::Deserialize;
+
+use crate::{
+    data::species::Species, types::{EntityId, Grade},
+};
 
 pub struct Cat {
     pub id: EntityId, // The associated Entity id
@@ -14,35 +18,55 @@ pub struct Cat {
     pub speed: i32,
     pub growth_rate: i32,
     pub acted: bool,
+
+    pub abilities: Abilities,
 }
 
-pub struct CatStats {
-    pub level: Option<i32>,
-    pub xp: Option<i32>,
+pub enum Experience {
+    Level(i32),
+    Points(i32),
+}
+
+impl Experience {
+    pub fn level(self, growth_rate: &Grade) -> i32 {
+        match self {
+            Experience::Level(l) => l,
+            Experience::Points(xp) => Cat::xp_to_level(xp, growth_rate.value(0)),
+        }
+    }
+}
+
+#[derive(Clone, Deserialize, Default)]
+pub struct Abilities {
+    pub q: Option<String>,
+    pub w: Option<String>,
+    pub e: Option<String>,
 }
 
 impl Cat {
-    pub fn new(id: EntityId, base_stats: &CatData, cat_stats: &CatStats) -> Self {
-        let level = cat_stats.level.unwrap_or_else(|| {
-            let xp = cat_stats.xp.expect("no level or xp");
-            Cat::xp_to_level(xp, base_stats.growth_rate.value(0))
-        });
-
-        let max_health = base_stats.health.value(level) * 2;
+    pub fn new(
+        id: EntityId,
+        species: &Species,
+        experience: Experience,
+        abilities: Abilities,
+    ) -> Self {
+        let level = experience.level(&species.growth_rate);
+        let max_health = species.health.value(level) * 2;
 
         Self {
             id,
-            name: base_stats.name.clone(),
+            name: species.name.clone(),
             level,
             health: max_health,
             max_health,
-            attack: base_stats.attack.value(level),
-            defense: base_stats.defense.value(level),
-            special: base_stats.special.value(level),
-            resistance: base_stats.resistance.value(level),
-            speed: (base_stats.speed.value(0) / 3).max(1) * 2,
-            growth_rate: base_stats.growth_rate.value(level),
+            attack: species.attack.value(level),
+            defense: species.defense.value(level),
+            special: species.special.value(level),
+            resistance: species.resistance.value(level),
+            speed: (species.speed.value(0) / 3).max(1) * 2,
+            growth_rate: species.growth_rate.value(level),
             acted: false,
+            abilities: abilities,
         }
     }
 
