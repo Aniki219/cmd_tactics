@@ -1,9 +1,17 @@
-use std::{collections::VecDeque};
+use std::collections::VecDeque;
+
+use ratatui::style::Color::Red;
 
 use crate::{
     phases::{
-        Phase, Transition::{self}, deal_damage::DealDamageState, end_turn::{EndTurnState, Turn},
-    }, types::{Cat, Coordinate, Entity, EntityId, EntityKind}, ui::game_ui::{GRID_HEIGHT, GRID_WIDTH}, world::World,
+        Phase,
+        Transition::{self},
+        deal_damage::DealDamageState,
+        end_turn::{EndTurnState, Turn},
+    },
+    types::{Cat, Coordinate, Entity, EntityId, EntityKind, Layer::ForegroundUi, Renderable},
+    ui::game_ui::{GRID_HEIGHT, GRID_WIDTH},
+    world::World,
 };
 
 const DIST_WEIGHT: i32 = 10;
@@ -12,9 +20,6 @@ const STEP_WEIGHT: i32 = 1;
 pub enum SubPhase {
     Move,
     Action,
-    // I just made this, its time to split enemy actions
-    // into sub phases so we can delay between them
-    // Also we should use the Timer class here
 }
 
 pub struct EnemyTurnState {
@@ -108,7 +113,11 @@ impl EnemyTurnState {
             return None;
         };
 
-        world.get_cats_in_range(pos, Some(EntityKind::Cat(0))).iter().min_by_key(|c| c.health).map(|c| c.id)
+        world
+            .get_cats_in_range(pos, Some(EntityKind::Cat(0)))
+            .iter()
+            .min_by_key(|c| c.health)
+            .map(|c| c.id)
     }
 }
 
@@ -126,28 +135,56 @@ impl Phase for EnemyTurnState {
                 Some(id) if world.enemies.contains_key(&id) => {
                     self.current = Some((id, SubPhase::Move));
                     Transition::None
-                } 
+                }
                 Some(_) => Transition::None,
-                None => Transition::Reset(Box::new(EndTurnState::new(Turn::Enemy)))
+                None => Transition::Reset(Box::new(EndTurnState::new(Turn::Enemy))),
             };
         };
-        
+
         match subphase {
             SubPhase::Move => {
                 self.move_to(id, world);
                 self.current = Some((id, SubPhase::Action));
                 Transition::None
-            },
+            }
 
             SubPhase::Action => {
                 if let Some(cat) = world.cat_mut(&id) {
                     cat.acted = true;
                 }
                 match self.pick_attack_target(id, world) {
-                    Some(target_id) => Transition::Push(Box::new(DealDamageState::new(id, target_id))),
+                    Some(target_id) => {
+                        Transition::Push(Box::new(DealDamageState::new(id, target_id)))
+                    }
                     _ => Transition::None,
                 }
             }
         }
+    }
+
+    fn renderables(&self, world: &World) -> Vec<Renderable> {
+        if let Some((id, subphase)) = self.current.iter().peekable().peek() {
+            let Some((pos, prev_pos)) = world.get(*id).map(|e| (e.pos, e.prev_pos)) else {
+                return Vec::new();
+            };
+
+            match subphase {
+                SubPhase::Action => {
+                    if prev_pos != pos {
+                        let r = Renderable {
+                            pos: prev_pos,
+                            glyph: String::from("X "),
+                            color: Red,
+                            layer: ForegroundUi,
+                            blink: false,
+                        };
+                        return vec![r];
+                    }
+                }
+                _ => (),
+            }
+        }
+
+        Vec::new()
     }
 }

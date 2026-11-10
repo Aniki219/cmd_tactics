@@ -2,13 +2,10 @@ use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{Frame};
 
 use crate::{
-    phases::{Phase, Transition, player_turn::PlayerTurnState},
-    types::{Cat, Coordinate, EntityId},
-    ui::{
+    phases::{Phase, Transition, mission_complete::MissionCompleteState, player_turn::PlayerTurnState}, types::{Cat, Coordinate, EntityId}, ui::{
         game_ui::{Panels, UiTheme},
         text_cycler::{CyclerEvent::Finished, TextCycler},
-    },
-    world::World,
+    }, world::World,
 };
 
 pub struct DropLootState {
@@ -27,6 +24,16 @@ impl DropLootState {
             text,
         }
     }
+
+    fn check_battle_end(&mut self, world: &mut World) -> Option<Transition> {
+        if world.enemies.len() <= 0 {
+            return Some(Transition::Reset(Box::new(MissionCompleteState::new())))
+        }
+        let pos = world
+            .get(self.target_id)
+            .map_or(Coordinate::center(), |t| t.pos);
+        return Some(Transition::Reset(Box::new(PlayerTurnState::new(pos))));
+    }
 }
 
 impl Phase for DropLootState {
@@ -43,10 +50,9 @@ impl Phase for DropLootState {
         match key.code {
             KeyCode::Char('a') => {
                 if matches!(self.text.advance(), Finished) {
-                    let pos = world
-                        .get(self.target_id)
-                        .map_or(Coordinate::center(), |t| t.pos);
-                    return Transition::Reset(Box::new(PlayerTurnState::new(pos)));
+                    if let Some(value) = self.check_battle_end(world) {
+                        return value;
+                    }
                 }
             }
             _ => (),

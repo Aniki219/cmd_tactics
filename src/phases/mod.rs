@@ -19,6 +19,7 @@ pub mod player_attack;
 pub mod player_selected;
 pub mod player_turn;
 pub mod drop_loot;
+pub mod mission_complete;
 
 pub trait Phase {
     fn name(&self) -> &str {
