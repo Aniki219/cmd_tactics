@@ -6,7 +6,7 @@ use ratatui::{
     widgets::{Block, Padding, Paragraph, StatefulWidget, Widget},
 };
 
-use crate::types::Cat;
+use crate::model::transient::cat::Cat;
 
 pub struct CatDetails<'a> {
     cat: &'a Cat,

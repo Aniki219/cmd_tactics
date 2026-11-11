@@ -2,12 +2,7 @@ use crossterm::event::KeyEvent;
 use ratatui::{Frame, style::Color};
 
 use crate::{
-    phases::{Phase, Transition, enemy_turn::EnemyTurnState, player_turn::PlayerTurnState},
-    types::Coordinate,
-    ui::game_ui::{Panels, PopupState},
-    ui::hud::Hud,
-    util::timer::Timer,
-    world::World,
+    model::{common::Coordinate, transient::world::World}, phases::{Phase, Transition, enemy_turn::EnemyTurnState, player_turn::PlayerTurnState}, ui::{game_ui::{Panels, PopupState}, hud::Hud}, util::timer::Timer,
 };
 
 pub struct EndTurnState {

@@ -1,13 +1,7 @@
 use ratatui::{Frame, style::Color::Blue};
 
 use crate::{
-    phases::{Phase, Transition},
-    ui::{
-        game_ui::{Panels, PopupState, UiTheme},
-        text_cycler::TextCycler,
-    },
-    util::timer::Timer,
-    world::World,
+    model::transient::world::World, phases::{Phase, Transition, UiTheme}, ui::{game_ui::{Panels, PopupState}, text_cycler::TextCycler}, util::timer::Timer,
 };
 
 pub struct MissionCompleteState {

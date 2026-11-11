@@ -4,7 +4,7 @@ use ratatui::{
     widgets::{Block, Padding, Paragraph, Widget},
 };
 
-use crate::{types::Cat, world::World};
+use crate::model::transient::{cat::Cat, world::World};
 
 pub struct Hud<'a> {
     cats: Vec<&'a Cat>,

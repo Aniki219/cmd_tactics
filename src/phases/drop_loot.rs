@@ -1,16 +1,17 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use ratatui::Frame;
+use ratatui::{
+    Frame,
+
+};
 
 use crate::{
-    phases::{
-        Phase, Transition, mission_complete::MissionCompleteState, player_turn::PlayerTurnState,
-    },
-    types::{Cat, Coordinate, EntityId},
-    ui::{
-        game_ui::{Panels, UiTheme},
-        text_cycler::{CyclerEvent::Finished, TextCycler},
-    },
-    world::World,
+    model::{
+        common::Coordinate, transient::{
+            cat::Cat, entity::EntityId, world::World,
+        },
+    }, phases::{
+        Phase, Transition, UiTheme, mission_complete::MissionCompleteState, player_turn::PlayerTurnState,
+    }, ui::{game_ui::Panels, text_cycler::{CyclerEvent::Finished, TextCycler}},
 };
 
 pub struct DropLootState {

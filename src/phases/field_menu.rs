@@ -2,15 +2,13 @@ use crossterm::event::KeyCode;
 use ratatui::{Frame, style::Color};
 
 use crate::{
+    model::transient::world::World,
     phases::{
         Phase, Transition, UiTheme,
         end_turn::{EndTurnState, Turn},
     },
-    ui::game_ui::Panels,
-    ui::select_list::SelectList,
-    world::World,
+    ui::{game_ui::Panels, select_list::SelectList},
 };
-
 pub const FIELD_MENU_ITEMS: [&str; 3] = ["Cats", "Yield", "End Turn"];
 
 pub struct FieldMenuState {

@@ -1,14 +1,17 @@
 use crossterm::event::{KeyCode, KeyEvent};
-use ratatui::{Frame, style::Color::White};
+use ratatui::{
+    Frame, style::Color::White,
+
+};
 
 use crate::{
-    phases::{
-        Phase, Transition,
-        action_menu::{ACTION_MENU_ITEMS, ActionMenuState},
-    }, types::{
-        Layer::{BackgroundUi, ForegroundUi},
-        *,
-    }, ui::{cat_details::{CatDetails, CatDetailsWidgetState}, game_ui::Panels, hud::Hud}, world::World,
+    log, model::{
+        common::{Coordinate, Layer::{self, BackgroundUi, ForegroundUi}, MOVE_TILE}, transient::{
+            entity::EntityId, world::World,
+        },
+    }, phases::{
+        Phase, Transition, action_menu::ActionMenuState
+    }, ui::{cat_details::{CatDetails, CatDetailsWidgetState}, game_ui::Panels, hud::Hud, renderable::Renderable},
 };
 
 pub struct PlayerSelectedState {
@@ -42,10 +45,13 @@ impl PlayerSelectedState {
             };
             if self.tiles.iter().any(|t| t.pos == self.cursor.pos) {
                 world.move_to(self.cat_id, self.cursor.pos);
-                return Transition::Push(Box::new(ActionMenuState::new(
-                    self.cat_id,
-                    &ACTION_MENU_ITEMS,
-                )));
+                match ActionMenuState::new(self.cat_id, world) {
+                    Ok(state) => return Transition::Push(Box::new(state)),
+                    Err(e) => {
+                        log!(e);
+                        return Transition::None
+                    }
+                }
             };
 
             Transition::Pop // Invalid tile returns to cat turn
@@ -117,10 +123,11 @@ impl Phase for PlayerSelectedState {
 
         if let (Some(cat), Some(entity)) = (world.get_cat(&self.cat_id), world.get(self.cat_id)) {
             let (glyph, color) = entity.glyph_and_color();
-            frame.render_stateful_widget(CatDetails::new(&cat), panels.menu_area(), &mut CatDetailsWidgetState{
-                glyph,
-                color,
-            });
+            frame.render_stateful_widget(
+                CatDetails::new(&cat),
+                panels.menu_area(),
+                &mut CatDetailsWidgetState { glyph, color },
+            );
         }
     }
 

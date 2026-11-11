@@ -1,7 +1,7 @@
 use ratatui::style::Color;
 use strum::{AsRefStr, Display};
 
-use crate::types::{coordinate::Coordinate, glyphs, layer::Layer};
+use crate::model::common::{Coordinate, Layer, glyphs};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
 pub struct EntityId(pub i32);

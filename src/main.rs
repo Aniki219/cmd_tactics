@@ -9,13 +9,9 @@ pub mod app;
 pub mod event;
 pub mod game;
 pub mod tui;
-pub mod world;
 
-pub mod data;
-pub mod mission;
+pub mod model;
 pub mod phases;
-pub mod types;
-
 pub mod ui;
 pub mod util;
 

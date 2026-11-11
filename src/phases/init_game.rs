@@ -1,6 +1,9 @@
 use crossterm::event::KeyEvent;
 
-use crate::{phases::{Phase, Transition}, world::World};
+use crate::{
+    model::transient::world::World,
+    phases::{Phase, Transition},
+};
 
 pub struct InitGame {}
 

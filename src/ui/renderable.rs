@@ -1,5 +1,7 @@
-use crate::types::{Entity, coordinate::Coordinate, layer::Layer};
+
 use ratatui::style::Color;
+
+use crate::model::{common::{Coordinate, Layer}, transient::entity::Entity};
 
 #[derive(Clone)]
 pub struct Renderable {

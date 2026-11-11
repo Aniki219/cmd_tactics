@@ -3,9 +3,8 @@ use std::collections::HashMap;
 use ratatui::style::Color;
 use std::mem::discriminant;
 
-use crate::{
-    data::species::Species, log, types::{Abilities, Cat, Coordinate, Entity, EntityId, EntityKind, Experience, Layer, Renderable}, util::colors::CAT_COLORS,
-};
+use crate::{log, model::{common::{Coordinate, Layer}, defs::species::Species, transient::{cat::{Abilities, Cat, Experience}, entity::{Entity, EntityId, EntityKind}}}, ui::renderable::Renderable, util::colors::CAT_COLORS};
+
 
 pub enum Side {
     Player,

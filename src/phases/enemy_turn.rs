@@ -2,17 +2,9 @@ use std::collections::VecDeque;
 
 use ratatui::style::Color::Red;
 
-use crate::{
-    phases::{
-        Phase,
-        Transition::{self},
-        deal_damage::DealDamageState,
-        end_turn::{EndTurnState, Turn},
-    },
-    types::{Cat, Coordinate, Entity, EntityId, EntityKind, Layer::ForegroundUi, Renderable},
-    ui::game_ui::{GRID_HEIGHT, GRID_WIDTH},
-    world::World,
-};
+use crate::{model::{common::{Coordinate, Layer::ForegroundUi}, transient::{cat::Cat, entity::{Entity, EntityId, EntityKind}, world::World}}, phases::{Phase, Transition, deal_damage::DealDamageState, end_turn::{EndTurnState, Turn}}, ui::{game_ui::{GRID_HEIGHT, GRID_WIDTH}, renderable::Renderable}};
+
+
 
 const DIST_WEIGHT: i32 = 10;
 const STEP_WEIGHT: i32 = 1;

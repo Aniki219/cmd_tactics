@@ -3,3 +3,4 @@ pub mod game_ui;
 pub mod hud;
 pub mod select_list;
 pub mod text_cycler;
+pub mod renderable;

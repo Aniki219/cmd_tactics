@@ -1,4 +1,5 @@
-use crate::{data::{GameData, mission::MissionData}, world::{Side, World}};
+use crate::model::{defs::mission::MissionData, transient::{game::GameData, world::{Side, World}}};
+
 
 pub fn spawn_mission(
     world: &mut World,

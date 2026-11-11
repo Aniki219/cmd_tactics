@@ -7,19 +7,21 @@ use ratatui::{
 };
 
 use crate::{
+    model::{
+        common::{Coordinate, Layer::BackgroundUi},
+        transient::{
+            entity::{EntityId, EntityKind},
+            world::World,
+        },
+    },
     phases::{
         Phase, Transition, UiTheme,
         end_turn::{EndTurnState, Turn},
         player_attack::PlayerAttackState,
         player_turn::PlayerTurnState,
     },
-    types::{Coordinate, EntityId, EntityKind, Layer::BackgroundUi, Renderable},
-    ui::game_ui::Panels,
-    ui::select_list::SelectList,
-    world::World,
+    ui::{game_ui::Panels, renderable::Renderable, select_list::SelectList},
 };
-
-pub const ACTION_MENU_ITEMS: [&str; 3] = ["Attack", "Skill", "End"];
 
 pub struct ActionMenuState {
     cat_id: EntityId, // EntityId of the cat performing the action
@@ -27,11 +29,26 @@ pub struct ActionMenuState {
 }
 
 impl ActionMenuState {
-    pub fn new(cat_id: EntityId, actions: &[&str]) -> Self {
-        Self {
+    pub fn new(cat_id: EntityId, world: &World) -> Result<Self, &'static str> {
+        let Some(abilities) = world.get_cat(&cat_id).map(|c| c.abilities.clone()) else {
+            return Err("Failed to create ActionMenuState");
+        };
+
+        let actions: Vec<String> = vec![
+            Some(String::from("Attack")),
+            abilities.q.as_ref().map(|q| format!("[Q] {}", q)),
+            abilities.w.as_ref().map(|w| format!("[W] {}", w)),
+            abilities.e.as_ref().map(|e| format!("[E] {}", e)),
+            Some(String::from("End")),
+        ]
+        .into_iter()
+        .flatten()
+        .collect();
+
+        Ok(Self {
             cat_id,
-            menu: SelectList::new(actions.iter().map(|s| s.to_string()).collect()),
-        }
+            menu: SelectList::new(actions),
+        })
     }
 }
 

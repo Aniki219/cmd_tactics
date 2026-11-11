@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::types::Grade;
+use crate::model::common::Grade;
 
 #[derive(Deserialize, Clone)]
 pub struct Species {
@@ -15,6 +15,6 @@ pub struct Species {
 }
 
 #[derive(Deserialize)]
-pub(super) struct SpeciesFile {
+pub struct SpeciesFile {
     pub cats: Vec<Species>,
 }

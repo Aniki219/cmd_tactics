@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::types::{Abilities, Coordinate, Experience};
+use crate::model::{common::Coordinate, transient::cat::{Abilities, Experience}};
 
 #[allow(dead_code)]
 #[derive(Deserialize)]

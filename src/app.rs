@@ -32,7 +32,6 @@ impl App {
     }
 
     pub fn tick(&mut self) {
-        
         match &mut self.state {
             AppState::InGame(game) => game.tick(),
             _ => (),
@@ -41,7 +40,7 @@ impl App {
 
     pub fn render(&mut self, frame: &mut Frame) {
         match &mut self.state {
-            AppState::InGame(game) => { game.render(frame) }
+            AppState::InGame(game) => game.render(frame),
             _ => {}
         }
     }
@@ -52,7 +51,7 @@ impl App {
             _ => (),
         }
         match key_event.code {
-            KeyCode::Esc | KeyCode::Char('q') => self.quit(),
+            KeyCode::Esc => self.quit(),
             KeyCode::Char('c') if key_event.modifiers == KeyModifiers::CONTROL => self.quit(),
             _ => {}
         };

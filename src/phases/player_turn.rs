@@ -2,20 +2,14 @@ use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{Frame, style::Color::White};
 
 use crate::{
-    phases::{
-        Phase, Transition,
-        end_turn::{EndTurnState, Turn},
-        enemy_turn::EnemyTurnState,
-        field_menu::FieldMenuState,
-        player_selected::PlayerSelectedState,
-    },
-    types::{Layer::ForegroundUi, *},
-    ui::{
-        cat_details::{CatDetails, CatDetailsWidgetState},
-        game_ui::Panels,
-        hud::Hud,
-    },
-    world::World,
+    model::{
+        common::{Coordinate, Layer::ForegroundUi}, transient::{
+            entity::{EntityId, EntityKind},
+            world::World,
+        },
+    }, phases::{
+        Phase, Transition, end_turn::{EndTurnState, Turn}, enemy_turn::EnemyTurnState, field_menu::FieldMenuState, player_selected::PlayerSelectedState,
+    }, ui::{cat_details::{CatDetails, CatDetailsWidgetState}, game_ui::Panels, hud::Hud, renderable::Renderable},
 };
 
 pub struct PlayerTurnState {

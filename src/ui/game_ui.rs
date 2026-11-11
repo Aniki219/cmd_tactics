@@ -12,9 +12,7 @@ use ratatui::{
 };
 
 use crate::{
-    phases::Phase,
-    types::{Layer::ForegroundUi, Renderable, coordinate::Coordinate, glyphs},
-    world::World,
+    model::{common::{Coordinate, Layer::ForegroundUi, glyphs}, transient::world::World}, phases::Phase, ui::renderable::Renderable,
 };
 
 pub const GRID_WIDTH: u16 = 54;

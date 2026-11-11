@@ -1,17 +1,23 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     layout::{Constraint, Layout},
-    style::{Color::Red}
+    style::Color::Red,
 };
 
 use crate::{
+    model::{
+        common::{Coordinate, Layer::ForegroundUi},
+        transient::{
+            entity::{EntityId, EntityKind},
+            world::World,
+        },
+    },
     phases::{Phase, Transition, deal_damage::DealDamageState},
-    types::{Coordinate, EntityId, EntityKind, Layer::ForegroundUi, Renderable},
     ui::{
         cat_details::{CatDetails, CatDetailsWidgetState},
         hud::Hud,
+        renderable::Renderable,
     },
-    world::World,
 };
 
 pub struct PlayerAttackState {

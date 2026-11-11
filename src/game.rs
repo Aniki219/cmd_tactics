@@ -2,19 +2,17 @@ use crossterm::event::KeyEvent;
 use ratatui::Frame;
 
 use crate::{
-    data::{GameData, load::load_toml, mission::MissionData},
     log,
-    mission::spawn_mission,
+    model::{
+        common::Coordinate,
+        defs::{load::load_defs, mission::MissionData},
+        transient::{game::GameData, mission::spawn_mission, world::World},
+    },
     phases::{
-        PhaseStack,
-        action_menu::{ACTION_MENU_ITEMS, ActionMenuState},
-        enemy_turn::EnemyTurnState,
-        init_game::InitGame,
+        PhaseStack, action_menu::ActionMenuState, enemy_turn::EnemyTurnState, init_game::InitGame,
         player_turn::PlayerTurnState,
     },
-    types::{Coordinate, EntityId},
     ui::game_ui::GameUi,
-    world::World,
 };
 
 pub struct Game {
@@ -41,7 +39,7 @@ impl Game {
 
     fn load_mission(&mut self) -> Result<(), String> {
         let game_data = GameData::load()?;
-        let mission_data = load_toml::<MissionData>("data/missions/mission_01.toml")
+        let mission_data = load_defs::<MissionData>("missions/mission_01.toml")
             .map_err(|e| format!("mission_01.toml: {e:?}"))?;
 
         log!("Spawning mission");
@@ -66,18 +64,24 @@ impl Game {
                     .reset(Box::new(PlayerTurnState::new(start)), &mut self.world);
             }
             "action" => {
-                self.phases.reset(
-                    Box::new(ActionMenuState::new(
-                        self.world
-                            .players
-                            .iter()
-                            .min_by_key(|k| k.0)
-                            .map(|(id, _)| *id)
-                            .unwrap_or_else(|| EntityId(1)),
-                        &ACTION_MENU_ITEMS,
-                    )),
-                    &mut self.world,
-                );
+                let Some(id) = self
+                    .world
+                    .players
+                    .iter()
+                    .min_by_key(|k| k.0)
+                    .map(|(id, _)| *id)
+                else {
+                    log!("No players");
+                    return;
+                };
+                match ActionMenuState::new(id, &self.world) {
+                    Ok(state) => {
+                        self.phases.reset(Box::new(state), &mut self.world);
+                    }
+                    Err(e) => {
+                        log!(e);
+                    }
+                }
             }
             "enemy" => {
                 self.phases

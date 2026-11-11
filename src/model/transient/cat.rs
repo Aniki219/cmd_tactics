@@ -1,8 +1,6 @@
 use serde::Deserialize;
 
-use crate::{
-    data::species::Species, types::{EntityId, Grade},
-};
+use crate::model::{common::Grade, defs::species::Species, transient::entity::EntityId};
 
 pub struct Cat {
     pub id: EntityId, // The associated Entity id

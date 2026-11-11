@@ -15,17 +15,17 @@
  */
 
 use crossterm::event::{KeyCode, KeyEvent};
-use ratatui::style::Color::{self};
+use ratatui::{
+    style::{Color},
+};
 
 use crate::{
-    phases::{Phase, Transition, drop_loot::DropLootState, player_turn::PlayerTurnState},
-    types::{EntityId, EntityKind, Layer::ForegroundUi, Renderable},
-    ui::{
-        game_ui::UiTheme,
-        text_cycler::{CyclerEvent::Finished, TextCycler},
-    },
-    util::timer::Timer,
-    world::World,
+    model::{common::Layer::ForegroundUi, transient::{
+            entity::{EntityId, EntityKind},
+            world::World,
+        }}, phases::{
+        Phase, Transition, UiTheme, drop_loot::DropLootState, player_turn::PlayerTurnState,
+    }, ui::{renderable::Renderable, text_cycler::{CyclerEvent::Finished, TextCycler}}, util::timer::Timer,
 };
 
 pub struct DealDamageState {

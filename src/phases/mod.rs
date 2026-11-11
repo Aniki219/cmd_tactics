@@ -2,11 +2,7 @@ use crossterm::event::KeyEvent;
 use ratatui::Frame;
 
 use crate::{
-    log,
-    types::Renderable,
-    ui::game_ui::Panels,
-    ui::{game_ui::UiTheme, hud::Hud},
-    world::World,
+    log, model::transient::world::World, ui::{game_ui::{Panels, UiTheme}, hud::Hud, renderable::Renderable}, 
 };
 
 pub mod action_menu;

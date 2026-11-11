@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::types::{Abilities, Experience};
+use crate::model::transient::cat::{Abilities, Experience};
 
 #[allow(dead_code)]
 #[derive(Deserialize)]
@@ -17,4 +17,4 @@ impl PlayerCat {
 }
 
 #[derive(Deserialize)]
-pub(super) struct PlayerCatFile { pub cats: Vec<PlayerCat> }
+pub struct PlayerCatFile { pub cats: Vec<PlayerCat> }
