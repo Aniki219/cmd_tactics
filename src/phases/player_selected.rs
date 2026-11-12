@@ -67,7 +67,7 @@ impl Phase for PlayerSelectedState {
         let Some(cat) = world.players.get(&self.cat_id) else {
             return Transition::None;
         };
-        let step = cat.speed;
+        let step = cat.speed();
 
         for i in -step..=step {
             for j in -step..=step {

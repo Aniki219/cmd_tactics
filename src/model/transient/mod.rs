@@ -1,5 +1,6 @@
 pub mod cat;
 pub mod entity;
-pub mod mission;
-pub mod world;
 pub mod game;
+pub mod mission;
+pub mod stat;
+pub mod world;

@@ -29,9 +29,9 @@ impl Widget for Hud<'_> {
             Paragraph::new(
                 cat.name.clone()
                     + "\nHP: "
-                    + cat.health.to_string().as_str()
+                    + cat.health().to_string().as_str()
                     + "/"
-                    + cat.max_health.to_string().as_str(),
+                    + cat.max_health().to_string().as_str(),
             )
             .alignment(Center)
             .block(Block::new().padding(Padding::new(1, 1, 0, 0)))

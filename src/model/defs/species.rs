@@ -1,17 +1,17 @@
 use serde::Deserialize;
 
-use crate::model::common::Grade;
+use crate::model::transient::stat::Stat;
 
 #[derive(Deserialize, Clone)]
 pub struct Species {
     pub name: String,
-    pub health: Grade,
-    pub attack: Grade,
-    pub defense: Grade,
-    pub special: Grade,
-    pub resistance: Grade,
-    pub speed: Grade,
-    pub growth_rate: Grade,
+    pub health: Stat,
+    pub attack: Stat,
+    pub defense: Stat,
+    pub special: Stat,
+    pub resistance: Stat,
+    pub speed: Stat,
+    pub growth_rate: Stat,
 }
 
 #[derive(Deserialize)]

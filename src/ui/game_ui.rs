@@ -12,13 +12,18 @@ use ratatui::{
 };
 
 use crate::{
-    model::{common::{Coordinate, Layer::ForegroundUi, glyphs}, transient::world::World}, phases::Phase, ui::renderable::Renderable,
+    model::{
+        common::{Coordinate, Layer::ForegroundUi, glyphs},
+        transient::world::World,
+    },
+    phases::Phase,
+    ui::renderable::Renderable,
 };
 
 pub const GRID_WIDTH: u16 = 54;
 pub const GRID_HEIGHT: u16 = 20;
 
-const MAX_WIDTH: u16 = 70;
+const MAX_WIDTH: u16 = 74;
 const HUD_HEIGHT: u16 = 4;
 
 pub struct GameUi {}

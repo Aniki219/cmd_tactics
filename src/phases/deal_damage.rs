@@ -69,7 +69,7 @@ impl Phase for DealDamageState {
                             if let (Some(source), Some(target)) = (
                                 world.get_cat(&self.source_id),
                                 world.get_cat(&self.target_id),
-                            ) && target.health <= 0
+                            ) && target.health() <= 0
                             {
                                 return Transition::Push(Box::new(DropLootState::new(
                                     source, target,
@@ -112,7 +112,7 @@ impl Phase for DealDamageState {
             return Transition::None;
         };
 
-        self.damage = (source.attack - target.defense / 2).clamp(0, 99);
+        self.damage = (source.attack() - target.defense() / 2).clamp(0, 99);
 
         self.damage_number = Some(Renderable {
             pos: target_entity.pos,

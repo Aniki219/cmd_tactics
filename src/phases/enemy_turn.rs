@@ -68,7 +68,7 @@ impl EnemyTurnState {
                     continue;
                 }
                 let steps = coord.dist(entity.pos);
-                if steps > cat.speed {
+                if steps > cat.speed() {
                     continue;
                 }
 
@@ -108,7 +108,7 @@ impl EnemyTurnState {
         world
             .get_cats_in_range(pos, Some(EntityKind::Cat(0)))
             .iter()
-            .min_by_key(|c| c.health)
+            .min_by_key(|c| c.health())
             .map(|c| c.id)
     }
 }
