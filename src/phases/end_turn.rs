@@ -2,7 +2,13 @@ use crossterm::event::KeyEvent;
 use ratatui::{Frame, style::Color};
 
 use crate::{
-    model::{common::Coordinate, transient::world::World}, phases::{Phase, Transition, enemy_turn::EnemyTurnState, player_turn::PlayerTurnState}, ui::{game_ui::{Panels, PopupState}, hud::Hud}, util::timer::Timer,
+    model::{common::Coordinate, transient::world::World},
+    phases::{Phase, Transition, enemy_turn::EnemyTurnState, player_turn::PlayerTurnState},
+    ui::{
+        game_ui::{Panels, PopupState},
+        hud::Hud,
+    },
+    util::timer::Timer,
 };
 
 pub struct EndTurnState {
@@ -97,7 +103,7 @@ impl Phase for EndTurnState {
             .players
             .iter_mut()
             .chain(world.enemies.iter_mut())
-            .for_each(|(_, c)| c.acted = false);
+            .for_each(|(_, c)| c.status_upkeep());
 
         Transition::None
     }

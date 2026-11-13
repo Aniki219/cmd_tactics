@@ -2,13 +2,7 @@ use serde::Deserialize;
 
 use crate::model::{
     defs::species::Species,
-    transient::{
-        entity::EntityId,
-        stat::{
-            Stat,
-            StatName::{self},
-        },
-    },
+    transient::{entity::EntityId, stat::Stat},
 };
 
 pub mod stats;
@@ -83,7 +77,10 @@ impl Cat {
             abilities: abilities,
             //status: Vec::new(),
             status: vec![
-                Status::StatBuff(StatName::Attack, 10, PercentHealth)
+                Status::Stun(1),
+                Status::Snare(2),
+                Status::Slow(3),
+                Status::Silence(4),
             ],
         }
     }

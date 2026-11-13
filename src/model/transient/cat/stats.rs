@@ -1,4 +1,4 @@
-use super::{Cat, Status};
+use super::Cat;
 use crate::{
     log,
     model::transient::{
@@ -74,32 +74,29 @@ impl Cat {
         let max_health = self.get_raw_stat(StatName::MaxHealth).max(1) as f32; // Prevents divide-by-zero
 
         let mut flat_total = 0.0_f32;
-        let mut percent_total = Vec::<f32>::new();
+        let mut multiplier = 1.0_f32;
 
-        for status in &self.status {
-            if let Status::StatBuff(stat, buff, scaling) = status {
-                if *stat != stat_name {
-                    continue;
+        self.status
+            .iter()
+            .filter_map(|s| s.stat_mod())
+            .for_each(|(stat, buff, scaling)| {
+                if stat != stat_name {
+                    return;
                 }
-                let input = *buff as f32;
+                let input = buff as f32;
                 match scaling {
                     StatScale::Flat => flat_total += input,
-                    StatScale::Percent => percent_total.push(input),
+                    StatScale::Percent => multiplier *= 1.0 + input / 100.0,
                     StatScale::PercentHealth => flat_total += health * input / 100.0,
                     StatScale::PercentMissingHealth => {
                         flat_total += (max_health - health) * input / 100.0
                     }
-                }
-            }
-        }
-
-        // multiplicatively join percent scaling together
-        let multiplier = percent_total
-            .iter()
-            .fold(1.0, |acc, p| acc * (1.0 + p / 100.0));
+                };
+            });
 
         let final_stat = (base_stat + flat_total) * multiplier;
-
         (final_stat - base_stat).round() as i32
     }
 }
+
+pub struct StatMod {}
